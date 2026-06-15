@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Intern Hub</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #1a1a26;
+      --border: #2a2a3d;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --gold: #ffd700;
+      --text: #e8e8f0;
+      --muted: #8888aa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .overline {
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(32px, 6vw, 64px);
+      font-weight: 900;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 48px;
+      text-align: center;
+    }
+    .cards {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 820px;
+      width: 100%;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      flex: 1;
+      min-width: 280px;
+      max-width: 360px;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .card.presentation { border-color: rgba(108,99,255,0.4); }
+    .card.presentation:hover { border-color: var(--accent); }
+    .card.game { border-color: rgba(0,212,170,0.4); }
+    .card.game:hover { border-color: var(--accent2); }
+    .card-icon { font-size: 40px; }
+    .card-label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .card h2 {
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .card.presentation h2 { color: var(--accent); }
+    .card.game h2 { color: var(--accent2); }
+    .card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .card-cta {
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .card.presentation .card-cta { color: var(--accent); }
+    .card.game .card-cta { color: var(--accent2); }
+    .footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overline">Intern Orientation · Sales Track</div>
+  <h1>Sales Intern Hub</h1>
+  <p class="subtitle">Everything you need to learn the craft and put it into practice.</p>
+
+  <div class="cards">
+    <a class="card presentation" href="sales-presentation.html">
+      <div class="card-icon">🎯</div>
+      <div class="card-label">Part 1</div>
+      <h2>The Art &amp; Science of Selling</h2>
+      <p>The frameworks, mindset, and techniques behind every great close — from emotion to referrals.</p>
+      <div class="card-cta">Open Presentation →</div>
+    </a>
+
+    <a class="card game" href="sales-training-game.html">
+      <div class="card-icon">⚡</div>
+      <div class="card-label">Part 2</div>
+      <h2>Sales Training Game</h2>
+      <p>Put it to the test. Real scenarios, live pressure, and a scoreboard that doesn't lie.</p>
+      <div class="card-cta">Launch Game →</div>
+    </a>
+  </div>
+
+  <div class="footer">TJY Options · Sales Training</div>
+</body>
+</html>

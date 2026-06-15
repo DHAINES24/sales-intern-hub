@@ -1,0 +1,3423 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Mastery — Intern Presentation</title>
+  <style>
+    /* ════════════════════════════════════════════════════
+       COLOR TOKENS & GLOBAL VARS  (preserved from original)
+    ════════════════════════════════════════════════════ */
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --card: #1a1a26;
+      --border: #2a2a3d;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --gold: #ffd700;
+      --text: #e8e8f0;
+      --muted: #8888aa;
+      --heading-font: 'Segoe UI', system-ui, sans-serif;
+      /* timing tokens for transition system */
+      --stagger: 80ms;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--heading-font);
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ════════════════════════════════════════════════════
+       SLIDE CONTAINER + BASE STATE
+       Slides are hidden by default. .active reveals them
+       (display only). Entrance MOTION is driven by the
+       .entering-forward / .entering-backward classes via
+       CSS @keyframes so animations re-fire on every visit.
+    ════════════════════════════════════════════════════ */
+    #deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px;
+      opacity: 0;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Generic directional slide travel (applies to most types) ── */
+    .slide.active.entering-forward  { animation: slideInRight 0.5s ease both; }
+    .slide.active.entering-backward { animation: slideInLeft  0.5s ease both; }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); }  to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInLeft  { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ════════════════════════════════════════════════════
+       TYPE-SPECIFIC ENTRANCES
+       These OVERRIDE the generic directional travel.
+    ════════════════════════════════════════════════════ */
+
+    /* ── Section dividers: ghost number slams in, headline cuts from left ── */
+    .slide-divider.active .section-num {
+      animation: numSlam 0.5s cubic-bezier(0.17, 0.67, 0.3, 1.3) both;
+    }
+    .slide-divider.active h2 {
+      animation: cutInLeft 0.5s ease both;
+    }
+    .slide-divider.active p {
+      animation: fadeSoft 0.5s ease 0.25s both;
+    }
+    @keyframes numSlam {
+      from { opacity: 0; transform: translate(-50%, -55%) scale(3); }
+      to   { opacity: 1; transform: translate(-50%, -55%) scale(1); }
+    }
+    @keyframes cutInLeft {
+      from { transform: translateX(-60px); }
+      to   { transform: translateX(0); }
+    }
+    @keyframes fadeSoft { from { opacity: 0; } to { opacity: 1 !important; } }
+
+    /* ── Content / list slides: heading first, then cards stagger in ── */
+    .slide-list.active h2,
+    .slide-content.active > h2 {
+      animation: headDrop 0.3s ease both;
+    }
+    @keyframes headDrop {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* staggered children — delays assigned per item below */
+    .slide-list.active .list-item,
+    .slide-content.active .stagger-item {
+      animation: cardSlideX 0.4s ease both;
+    }
+    @keyframes cardSlideX {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    /* per-item stagger delays (heading clears at ~300ms) */
+    .slide-list.active .list-item:nth-child(1),
+    .slide-content.active .stagger-item:nth-child(1) { animation-delay: 0.30s; }
+    .slide-list.active .list-item:nth-child(2),
+    .slide-content.active .stagger-item:nth-child(2) { animation-delay: 0.38s; }
+    .slide-list.active .list-item:nth-child(3),
+    .slide-content.active .stagger-item:nth-child(3) { animation-delay: 0.46s; }
+    .slide-list.active .list-item:nth-child(4),
+    .slide-content.active .stagger-item:nth-child(4) { animation-delay: 0.54s; }
+    .slide-list.active .list-item:nth-child(5),
+    .slide-content.active .stagger-item:nth-child(5) { animation-delay: 0.62s; }
+    .slide-list.active .list-item:nth-child(6),
+    .slide-content.active .stagger-item:nth-child(6) { animation-delay: 0.70s; }
+
+    /* ── Quote slides: 3 word-groups fade sequentially, then attribution rises ──
+       Uses .anim-ready (toggled by JS on every visit) instead of .active so
+       the animation re-fires reliably even when the slide revisited.
+       .qg spans default opacity:0; animation fills to opacity:1.
+    ── */
+    .big-quote .qg { display: inline; }
+    .slide-quote:not(.anim-ready) .qg { opacity: 0; }
+    .slide-quote.anim-ready .qg {
+      animation: fadeSoft 0.6s ease both;
+    }
+    .slide-quote.anim-ready .qg:nth-child(1) { animation-delay: 0.05s; }
+    .slide-quote.anim-ready .qg:nth-child(2) { animation-delay: 0.30s; }
+    .slide-quote.anim-ready .qg:nth-child(3) { animation-delay: 0.55s; }
+    .slide-quote.anim-ready .quote-attr {
+      animation: attrRise 0.5s ease 0.85s both;
+    }
+    .slide-quote.anim-ready .quote-pills {
+      animation: fadeSoft 0.6s ease 1.05s both;
+    }
+    /* Keep quote-attr and quote-pills invisible until animated in */
+    .slide-quote:not(.anim-ready) .quote-attr,
+    .slide-quote:not(.anim-ready) .quote-pills { opacity: 0; }
+    @keyframes attrRise {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Technique slides: whole panel slides in from right (card-flip feel) ── */
+    .slide-technique.active {
+      animation: techSlide 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+    @keyframes techSlide {
+      from { opacity: 0; transform: translateX(60px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Activity slides: sharp cut, no transform ── */
+    .slide-activity.active {
+      animation: hardCut 0.08s linear both;
+    }
+    @keyframes hardCut { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── Final quote slide: slow rise, room going quiet ── */
+    .slide-final.active {
+      animation: slowRise 0.8s ease both;
+    }
+    @keyframes slowRise {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════════════════════════════════════════
+       NAVIGATION
+    ════════════════════════════════════════════════════ */
+    #nav {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      z-index: 100;
+      background: rgba(18,18,26,0.9);
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      border-radius: 50px;
+      backdrop-filter: blur(12px);
+    }
+
+    #nav button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    #nav button:disabled { opacity: 0.3; cursor: default; }
+    #nav button:hover:not(:disabled) { opacity: 0.85; }
+
+    #slide-counter {
+      font-size: 13px;
+      color: var(--muted);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* ── Progress bar ── */
+    #progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.4s ease;
+      z-index: 100;
+    }
+
+    /* ════════════════════════════════════════════════════
+       SLIDE-SPECIFIC STYLES (preserved)
+    ════════════════════════════════════════════════════ */
+
+    /* Title slide */
+    .slide-title {
+      background: radial-gradient(ellipse at 60% 40%, #1a0a3a 0%, var(--bg) 70%);
+    }
+
+    .slide-title .overline {
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 20px;
+    }
+
+    .slide-title h1 {
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 24px;
+    }
+
+    .slide-title .subtitle {
+      font-size: clamp(14px, 2vw, 20px);
+      color: var(--muted);
+      max-width: 600px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-top: 32px;
+      letter-spacing: 1px;
+    }
+
+    /* Section divider */
+    .slide-divider {
+      background: radial-gradient(ellipse at 40% 50%, #0a1a2a 0%, var(--bg) 70%);
+    }
+
+    .slide-divider .section-num {
+      font-size: 120px;
+      font-weight: 900;
+      color: rgba(108,99,255,0.12);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -55%);
+      user-select: none;
+      line-height: 1;
+    }
+
+    .slide-divider h2 {
+      font-size: clamp(28px, 5vw, 56px);
+      font-weight: 800;
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .slide-divider p {
+      font-size: 18px;
+      color: var(--muted);
+      margin-top: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* List slide */
+    .slide-list h2 {
+      font-size: clamp(22px, 3.5vw, 38px);
+      font-weight: 700;
+      margin-bottom: 36px;
+      color: #fff;
+    }
+
+    .list-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 24px;
+      text-align: left;
+      transition: border-color 0.2s;
+    }
+
+    .list-item:hover { border-color: var(--accent); }
+
+    .list-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .list-text strong { display: block; font-size: 16px; color: #fff; margin-bottom: 4px; }
+    .list-text span { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+    /* Two-column */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .col-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: left;
+    }
+
+    .col-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .col-card .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent2);
+      flex-shrink: 0;
+    }
+
+    .col-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .col-card ul li {
+      font-size: 14px;
+      color: var(--muted);
+      padding-left: 16px;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .col-card ul li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* Quote slide */
+    .slide-quote {
+      background: radial-gradient(ellipse at 50% 50%, #1a0d2e 0%, var(--bg) 70%);
+    }
+
+    .big-quote {
+      font-size: clamp(22px, 3.5vw, 42px);
+      font-weight: 800;
+      max-width: 800px;
+      line-height: 1.25;
+      color: #fff;
+    }
+    .big-quote .qg { display: inline; color: #fff; }
+
+    .quote-attr {
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Steps slide */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+    }
+    /* Slide 9 overrides to 3-col inline */
+
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--accent);
+      border-radius: 16px;
+      padding: 32px 28px;
+      min-height: 160px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .step-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    /* Per-step accent colors cycling through palette */
+    .step-card:nth-child(1) { border-left-color: var(--accent); }
+    .step-card:nth-child(2) { border-left-color: var(--accent2); }
+    .step-card:nth-child(3) { border-left-color: var(--gold); }
+    .step-card:nth-child(4) { border-left-color: var(--accent3); }
+    .step-card:nth-child(5) { border-left-color: var(--accent2); }
+    .step-card:nth-child(6) { border-left-color: var(--accent); }
+    .step-card:nth-child(7) { border-left-color: var(--gold); }
+
+    .step-card::before {
+      content: attr(data-num);
+      position: absolute;
+      top: -8px;
+      right: 16px;
+      font-size: 80px;
+      font-weight: 900;
+      color: rgba(108,99,255,0.18);
+      line-height: 1;
+    }
+
+    .step-card h4 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    /* Colored h4 per step */
+    .step-card:nth-child(1) h4 { color: var(--accent); }
+    .step-card:nth-child(2) h4 { color: var(--accent2); }
+    .step-card:nth-child(3) h4 { color: var(--gold); }
+    .step-card:nth-child(4) h4 { color: var(--accent3); }
+    .step-card:nth-child(5) h4 { color: var(--accent2); }
+    .step-card:nth-child(6) h4 { color: var(--accent); }
+    .step-card:nth-child(7) h4 { color: var(--gold); }
+
+    .step-card p {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* Techniques slide */
+    .tech-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 820px;
+    }
+
+    .tech-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: left;
+    }
+
+    .tech-item strong {
+      font-size: 15px;
+      color: var(--accent2);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .tech-item span {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .tech-item em {
+      font-style: italic;
+      color: rgba(232,232,240,0.65);
+    }
+
+    /* Technique deep-dive slides */
+    .slide-technique {
+      background: radial-gradient(ellipse at 30% 60%, #0d0d20 0%, var(--bg) 70%);
+      align-items: flex-start;
+      text-align: left;
+      padding: 48px 72px;
+      overflow-y: auto;
+    }
+
+    .technique-num {
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .technique-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .technique-title {
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    .technique-def {
+      font-size: clamp(14px, 1.6vw, 18px);
+      color: var(--muted);
+      max-width: 700px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .technique-def strong { color: var(--accent2); }
+
+    .technique-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .technique-example {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 18px 22px;
+      max-width: 760px;
+    }
+
+    .example-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+
+    .technique-example p {
+      font-size: clamp(13px, 1.4vw, 16px);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .technique-example p em {
+      color: var(--accent2);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .technique-why {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 20px;
+      max-width: 720px;
+      background: rgba(108,99,255,0.08);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    .why-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    .technique-why span:last-child {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* Highlight pill */
+    .pill {
+      display: inline-block;
+      background: rgba(108,99,255,0.2);
+      border: 1px solid rgba(108,99,255,0.4);
+      color: var(--accent);
+      font-size: 13px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin: 4px;
+    }
+
+    /* Closing slide (3 Principles) */
+    .slide-closing {
+      background: radial-gradient(ellipse at 50% 40%, #0f1f0f 0%, var(--bg) 70%);
+    }
+
+    .closing-headline {
+      font-size: clamp(28px, 5vw, 60px);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent2) 30%, var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+    }
+
+    .principles-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .principle-badge {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 14px;
+      color: var(--text);
+      max-width: 220px;
+      text-align: center;
+    }
+
+    .principle-badge .icon { font-size: 24px; display: block; margin-bottom: 8px; }
+
+    /* ════════════════════════════════════════════════════
+       EMOTION REVOLVER SLIDE (interactive — preserved + upgraded)
+    ════════════════════════════════════════════════════ */
+    .slide-emotion-gun {
+      background: radial-gradient(ellipse at 35% 40%, #130820 0%, var(--bg) 65%);
+      justify-content: flex-start;
+      align-items: center;
+      padding: 32px 56px 80px;
+      gap: 12px;
+    }
+
+    .revolver-top-label { text-align: center; position: relative; }
+    .revolver-eyebrow {
+      font-size: 11px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .revolver-title {
+      font-size: clamp(32px, 5vw, 58px);
+      font-weight: 900;
+      background: linear-gradient(135deg, #fff 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.05;
+      margin: 2px 0 6px;
+    }
+    .revolver-tagline {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .revolver-tagline em { color: var(--accent2); font-style: normal; font-weight: 600; }
+
+    /* Mode toggle — top-right of slide */
+    .mode-toggle {
+      position: absolute;
+      top: 24px;
+      right: 32px;
+      display: flex;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      overflow: hidden;
+      z-index: 30;
+    }
+    .mode-toggle button {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 8px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .mode-toggle button.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+
+    .revolver-stage {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+      max-width: 980px;
+      position: relative;
+    }
+
+    .gun-body-svg {
+      width: 200px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 4px 24px rgba(0,0,0,0.6));
+      margin-right: -20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cylinder-wrap {
+      position: relative;
+      flex-shrink: 0;
+      z-index: 3;
+    }
+
+    #revolverCanvas {
+      display: block;
+      cursor: crosshair;
+      border-radius: 50%;
+      filter: drop-shadow(0 0 30px rgba(108,99,255,0.35));
+    }
+
+    /* Chamber hover card */
+    .chamber-card {
+      position: absolute;
+      top: -10px;
+      right: -230px;
+      width: 210px;
+      background: #1a1a2e;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 20;
+    }
+    .chamber-card.hidden { opacity: 0; transform: translateX(-8px); }
+
+    .cc-icon { font-size: 28px; margin-bottom: 8px; }
+    .cc-name { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .cc-hook { font-size: 12px; color: var(--accent2); font-style: italic; margin-bottom: 6px; line-height: 1.4; }
+    .cc-ex   { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    /* Muzzle flash */
+    .muzzle-flash {
+      position: absolute;
+      top: 50%;
+      left: -80px;
+      transform: translateY(-50%);
+      width: 90px;
+      height: 50px;
+      background: radial-gradient(ellipse at 80% 50%, #fff9 0%, #ffd70066 40%, transparent 80%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: flashAnim 0.4s ease-out forwards;
+    }
+    .muzzle-flash.hidden { display: none; }
+    @keyframes flashAnim {
+      0%   { opacity: 1; transform: translateY(-50%) scaleX(1); }
+      60%  { opacity: 0.8; transform: translateY(-50%) scaleX(1.3); }
+      100% { opacity: 0; transform: translateY(-50%) scaleX(0.8); }
+    }
+
+    /* Controls right panel */
+    .gun-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      padding-left: 32px;
+      flex: 1;
+    }
+
+    .fire-hint {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .fire-btn {
+      background: linear-gradient(135deg, #6c63ff, #a855f7);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 32px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 2px;
+      box-shadow: 0 4px 24px rgba(108,99,255,0.4);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .fire-btn:active { transform: scale(0.95); box-shadow: 0 2px 12px rgba(108,99,255,0.3); }
+
+    .fired-emotion {
+      font-size: 20px;
+      font-weight: 800;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 2px solid currentColor;
+      animation: popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    .fired-emotion.hidden { display: none; }
+    @keyframes popIn {
+      0%   { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+
+    .gun-footer-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .gfs-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .gfs-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Activity-mode prompt + reveal */
+    .activity-prompt {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gold);
+      max-width: 260px;
+      line-height: 1.45;
+    }
+    .activity-prompt.hidden { display: none; }
+    .reveal-block { display: flex; flex-direction: column; gap: 6px; }
+    .reveal-block.hidden { display: none; }
+    .reveal-name {
+      font-size: 22px; font-weight: 900;
+      animation: popIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    .reveal-hook {
+      font-size: 13px; color: var(--accent2); font-style: italic;
+      animation: popIn 0.45s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    .next-spin-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .next-spin-btn:hover { border-color: var(--accent2); }
+    .next-spin-btn.hidden { display: none; }
+    .info-only.hidden, .activity-only.hidden { display: none; }
+
+    /* ════════════════════════════════════════════════════
+       KNOW YOUR NICHE SLIDE (preserved)
+    ════════════════════════════════════════════════════ */
+    .slide-niche {
+      background: radial-gradient(ellipse at 50% 40%, #0e1a12 0%, var(--bg) 70%);
+      padding: 48px 60px 90px;
+      gap: 20px;
+    }
+
+    .niche-headline {
+      font-size: clamp(26px, 4vw, 44px);
+      font-weight: 900;
+      background: linear-gradient(135deg, #fff 30%, var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .niche-sub {
+      font-size: 15px;
+      color: var(--muted);
+      margin-top: -8px;
+    }
+
+    .niche-sub em {
+      color: var(--accent2);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .niche-grid {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .niche-card {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .niche-card.luxury { border-color: rgba(167,139,250,0.4); }
+    .niche-card.pipe   { border-color: rgba(56,189,248,0.4); }
+
+    .niche-icon { font-size: 32px; }
+
+    .niche-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    .niche-desc {
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .niche-bullets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .nbullet {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .niche-tip {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      font-style: italic;
+    }
+
+    .niche-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .niche-vs {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--muted);
+      letter-spacing: 3px;
+    }
+
+    /* ════════════════════════════════════════════════════
+       ACTIVITY: WRONG-ANSWER BUZZER (Tie-Down slide)
+    ════════════════════════════════════════════════════ */
+    .quiz-trigger-btn, .activity-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 22px;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(108,99,255,0.3);
+    }
+    .activity-btn:active { transform: scale(0.96); }
+
+    .quiz-box { margin-top: 22px; max-width: 760px; width: 100%; }
+    .quiz-box.hidden { display: none; }
+    .quiz-label {
+      font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 4px;
+    }
+    .quiz-instruction { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+
+    .quiz-option {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--text);
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+      overflow: hidden;
+    }
+    .quiz-option:hover { border-color: var(--accent); }
+    .quiz-option.flash-red { animation: shakeRed 0.5s ease; border-color: var(--accent3) !important; }
+    .quiz-option.flash-red-brief { animation: briefRed 0.6s ease; }
+    .quiz-option.collapse { animation: collapseOut 0.5s ease 0.5s forwards; }
+    .quiz-option.pulse-green { animation: pulseGreen 0.7s ease; border-color: var(--accent2) !important; }
+    @keyframes shakeRed {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); } 40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
+    }
+    @keyframes briefRed {
+      0% { border-color: var(--accent3); background: rgba(255,107,107,0.12); }
+      100% { border-color: var(--border); background: var(--card); }
+    }
+    @keyframes collapseOut {
+      to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0; }
+    }
+    @keyframes pulseGreen {
+      0%,100% { box-shadow: 0 0 0 rgba(0,212,170,0); }
+      50% { box-shadow: 0 0 24px rgba(0,212,170,0.6); }
+    }
+    .quiz-explain {
+      font-size: 14px; color: var(--accent2); line-height: 1.55;
+      background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.25);
+      border-radius: 10px; padding: 14px 18px; margin-top: 6px;
+    }
+    .quiz-explain.hidden, .quiz-hint.hidden { display: none; }
+    .quiz-hint {
+      font-size: 14px; color: var(--gold); margin-top: 6px; font-style: italic;
+    }
+    .quiz-reset {
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      padding: 8px 18px; border-radius: 30px; font-size: 13px; font-weight: 600;
+      cursor: pointer; margin-top: 14px;
+    }
+    .quiz-reset:hover { border-color: var(--accent2); }
+    .quiz-reset.hidden { display: none; }
+
+    /* ════════════════════════════════════════════════════
+       ACTIVITY: BUILD-THE-CLOSE COUNTDOWN (Alternative slide)
+    ════════════════════════════════════════════════════ */
+    .close-box { margin-top: 22px; max-width: 760px; width: 100%; }
+    .close-box.hidden { display: none; }
+    .close-label {
+      font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
+    }
+    .weak-q, .strong-q {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; padding: 16px 20px; font-size: 16px;
+      text-align: left; line-height: 1.5;
+    }
+    .weak-q { border-color: var(--accent3); color: var(--text); }
+    .countdown-track {
+      height: 8px; background: var(--border); border-radius: 6px;
+      margin: 14px 0; overflow: hidden;
+    }
+    .countdown-fill {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, var(--accent2), var(--gold), var(--accent3));
+      transform-origin: left center;
+      transform: scaleX(0);
+    }
+    .countdown-fill.running { animation: drain 10s linear forwards; }
+    @keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+    .strong-reveal { margin-top: 10px; }
+    .strong-reveal.hidden { display: none; }
+    .strong-q {
+      border-color: var(--accent2); color: #fff;
+      animation: flipIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes flipIn {
+      from { opacity: 0; transform: rotateX(-80deg); }
+      to   { opacity: 1; transform: rotateX(0); }
+    }
+    .strong-badge {
+      display: inline-block; margin-top: 12px;
+      background: rgba(0,212,170,0.15); border: 1px solid var(--accent2);
+      color: var(--accent2); font-size: 13px; font-weight: 700;
+      padding: 6px 16px; border-radius: 20px;
+    }
+
+    /* ════════════════════════════════════════════════════
+       ACTIVITY: COLD OPEN RANKER (dedicated slide)
+    ════════════════════════════════════════════════════ */
+    .slide-ranker {
+      background: radial-gradient(ellipse at 50% 40%, #1a120a 0%, var(--bg) 70%);
+      padding: 40px 60px 90px;
+      gap: 6px;
+    }
+    .ranker-title {
+      font-size: clamp(26px, 4vw, 44px); font-weight: 900;
+      background: linear-gradient(135deg, #fff 30%, var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .ranker-sub { font-size: 15px; color: var(--muted); margin-bottom: 18px; }
+    .ranker-list {
+      display: flex; flex-direction: column; gap: 10px;
+      width: 100%; max-width: 720px;
+    }
+    .rank-card {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; padding: 16px 20px; cursor: pointer;
+      text-align: left; transition: border-color 0.2s, opacity 0.3s, transform 0.5s ease;
+      position: relative;
+    }
+    .rank-card:hover { border-color: var(--accent); }
+    .rank-card.ranked { opacity: 0.55; cursor: default; }
+    .rank-stamp {
+      width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 15px;
+      background: var(--border); color: var(--muted);
+      transition: background 0.2s, color 0.2s;
+    }
+    .rank-card.ranked .rank-stamp {
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    }
+    .rank-line { font-size: 15px; color: var(--text); line-height: 1.4; }
+    .rank-verdict {
+      font-size: 12px; color: var(--muted); margin-top: 4px; display: none;
+    }
+    .rank-card.revealed.good { border-color: var(--accent2); }
+    .rank-card.revealed.bad  { border-color: var(--accent3); }
+    .rank-card.revealed { opacity: 1; }
+    .rank-card.revealed .rank-verdict { display: block; }
+    .rank-card.revealed.good .rank-verdict { color: var(--accent2); }
+    .rank-card.revealed.bad  .rank-verdict { color: var(--accent3); }
+    .reveal-rank-btn { margin-top: 18px; }
+    .reveal-rank-btn.hidden { display: none; }
+
+    /* ════════════════════════════════════════════════════
+       ACTIVITY: LIVE REP — Role-Play Card Draw
+    ════════════════════════════════════════════════════ */
+    .slide-liverep {
+      background: radial-gradient(ellipse at 50% 40%, #0e0820 0%, #050507 70%);
+      gap: 14px;
+    }
+    .liverep-eyebrow {
+      font-size: 11px; letter-spacing: 5px; text-transform: uppercase; color: var(--accent);
+    }
+    .liverep-headline {
+      font-size: clamp(44px, 8vw, 100px); font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, var(--gold) 20%, #fff 90%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      letter-spacing: 2px;
+    }
+    .liverep-sub {
+      font-size: clamp(14px, 1.8vw, 20px); color: var(--muted); font-weight: 500;
+    }
+
+    /* Card flip container */
+    .liverep-scene {
+      perspective: 900px;
+      width: min(520px, 90vw);
+      height: 260px;
+      margin: 8px 0;
+    }
+    .liverep-card-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .liverep-card-inner.flipped { transform: rotateY(180deg); }
+
+    .liverep-face {
+      position: absolute; inset: 0;
+      border-radius: 20px;
+      backface-visibility: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Front — draw button */
+    .liverep-front {
+      background: var(--card);
+      border: 2px dashed var(--border);
+      flex-direction: column; gap: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .liverep-front:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 40px rgba(108,99,255,0.2);
+    }
+    .liverep-draw-icon { font-size: 40px; }
+    .liverep-draw-label {
+      font-size: 16px; font-weight: 800; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .liverep-draw-hint { font-size: 12px; color: var(--muted); }
+
+    /* Back — scenario card */
+    .liverep-back {
+      transform: rotateY(180deg);
+      flex-direction: column;
+      text-align: left;
+      padding: 28px 32px;
+      gap: 10px;
+    }
+    .scenario-product {
+      font-size: clamp(22px, 3.5vw, 36px); font-weight: 900;
+      color: var(--gold);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .scenario-product .s-emoji { font-size: clamp(28px, 4vw, 44px); }
+    .scenario-row {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .scenario-label {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    }
+    .scenario-prospect { font-size: 14px; color: var(--text); line-height: 1.5; font-style: italic; }
+    .scenario-goal { font-size: 13px; color: var(--accent2); line-height: 1.5; font-weight: 600; }
+    .scenario-border-bar {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+      border-radius: 20px 0 0 20px;
+    }
+
+    /* Bottom controls */
+    .liverep-controls {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center;
+    }
+    .liverep-btn {
+      border: none; border-radius: 12px; padding: 12px 28px;
+      font-size: 15px; font-weight: 800; cursor: pointer; letter-spacing: 1px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .liverep-btn:active { transform: scale(0.95); }
+    .liverep-btn.primary {
+      background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.35);
+    }
+    .liverep-btn.ghost {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+    }
+    .liverep-btn.go {
+      background: linear-gradient(135deg, var(--accent2), #059669); color: #fff;
+      box-shadow: 0 4px 20px rgba(0,212,170,0.3);
+    }
+    .liverep-btn.hidden { display: none; }
+    .liverep-count-badge {
+      font-size: 11px; color: var(--muted); letter-spacing: 1px;
+    }
+
+    /* ════════════════════════════════════════════════════
+       FINAL CALLBACK CLOSE SLIDE (redesigned — mirrors title)
+    ════════════════════════════════════════════════════ */
+    .slide-final {
+      background: radial-gradient(ellipse at 60% 40%, #3a0a14 0%, var(--bg) 70%);
+    }
+    .slide-final .overline {
+      font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 20px;
+    }
+    .final-quote {
+      font-size: clamp(36px, 6vw, 72px); font-weight: 800; line-height: 1.1;
+      max-width: 900px;
+      background: linear-gradient(135deg, var(--gold) 30%, #fff 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 18px;
+    }
+    .final-attr {
+      font-size: clamp(13px, 1.6vw, 16px); color: var(--muted);
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+    .final-pills {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 32px;
+    }
+    .final-pills .pill { opacity: 0; }
+    .slide-final.active .final-pills .pill {
+      animation: pillPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
+    }
+    /* staggered 100ms each, after slide settles (~0.9s) */
+    .slide-final.active .final-pills .pill:nth-child(1) { animation-delay: 0.90s; }
+    .slide-final.active .final-pills .pill:nth-child(2) { animation-delay: 1.00s; }
+    .slide-final.active .final-pills .pill:nth-child(3) { animation-delay: 1.10s; }
+    .slide-final.active .final-pills .pill:nth-child(4) { animation-delay: 1.20s; }
+    .slide-final.active .final-pills .pill:nth-child(5) { animation-delay: 1.30s; }
+    .slide-final.active .final-pills .pill:nth-child(6) { animation-delay: 1.40s; }
+    @keyframes pillPop {
+      from { opacity: 0; transform: translateY(12px) scale(0.85); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .final-badge {
+      display: inline-block; background: transparent; border: 1px solid var(--gold);
+      color: var(--gold); font-size: 13px; padding: 6px 18px; border-radius: 20px;
+      margin-top: 32px; letter-spacing: 2px; font-weight: 700;
+    }
+
+    /* ════════════════════════════════════════════════════
+       BOND BUILDING SLIDE
+    ════════════════════════════════════════════════════ */
+    .slide-bond {
+      background: radial-gradient(ellipse at 40% 50%, #0a1a14 0%, var(--bg) 70%);
+      padding: 48px 64px 90px;
+      gap: 0;
+    }
+    .bond-headline {
+      font-size: clamp(24px,4vw,42px); font-weight: 900;
+      background: linear-gradient(135deg, #fff 30%, var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 6px;
+    }
+    .bond-sub {
+      font-size: 15px; color: var(--muted); margin-bottom: 28px;
+    }
+    .bond-grid {
+      display: grid; grid-template-columns: repeat(2,1fr); gap: 16px;
+      width: 100%; max-width: 900px;
+    }
+    .bond-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 5px solid var(--accent2);
+      border-radius: 16px; padding: 24px 22px; text-align: left;
+      position: relative; overflow: hidden;
+    }
+    .bond-card:nth-child(1) { border-left-color: var(--accent2); }
+    .bond-card:nth-child(2) { border-left-color: var(--accent); }
+    .bond-card:nth-child(3) { border-left-color: var(--gold); }
+    .bond-card:nth-child(4) { border-left-color: var(--accent3); }
+    .bond-card-icon { font-size: 26px; margin-bottom: 8px; }
+    .bond-card h4 { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .bond-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .bond-card:nth-child(1) h4 { color: var(--accent2); }
+    .bond-card:nth-child(2) h4 { color: var(--accent); }
+    .bond-card:nth-child(3) h4 { color: var(--gold); }
+    .bond-card:nth-child(4) h4 { color: var(--accent3); }
+
+    /* Bond activity */
+    .bond-kill-box { margin-top: 24px; max-width: 860px; width: 100%; }
+    .bond-kill-box.hidden { display: none; }
+    .bond-kills {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;
+    }
+    .bond-kill-pill {
+      background: var(--card); border: 2px solid var(--border);
+      color: var(--text); padding: 10px 18px; border-radius: 12px;
+      font-size: 14px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .bond-kill-pill:hover { border-color: var(--accent3); }
+    .bond-kill-pill.revealed { border-color: var(--accent3); background: rgba(255,107,107,0.12); color: var(--accent3); }
+    .bond-kill-reveal { font-size: 14px; color: var(--muted); margin-top: 12px; line-height: 1.6; display: none; }
+    .bond-kill-reveal.show, .bond-kill-reveal.visible { display: block; }
+
+    /* ════════════════════════════════════════════════════
+       OBJECTION HANDLING SLIDE
+    ════════════════════════════════════════════════════ */
+    .slide-objection {
+      background: radial-gradient(ellipse at 60% 40%, #1a0a10 0%, var(--bg) 70%);
+      padding: 40px 64px 90px;
+      align-items: flex-start;
+      text-align: left;
+      gap: 0;
+      overflow-y: auto;
+    }
+    .obj-headline {
+      font-size: clamp(26px,4vw,44px); font-weight: 900;
+      background: linear-gradient(135deg, #fff 30%, var(--accent3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 6px;
+    }
+    .obj-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
+    .obj-steps {
+      display: flex; flex-direction: column; gap: 10px;
+      width: 100%; max-width: 820px; margin-bottom: 20px;
+    }
+    .obj-step {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 4px solid var(--accent3);
+      border-radius: 12px; padding: 16px 20px;
+    }
+    .obj-step-num {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: var(--accent3); color: #fff;
+      font-size: 13px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .obj-step h5 { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+    .obj-step p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .obj-step em { color: var(--accent2); font-style: normal; font-weight: 600; }
+
+    /* Objection activity */
+    .obj-activity-box { margin-top: 8px; max-width: 820px; width: 100%; }
+    .obj-activity-box.hidden { display: none; }
+    .obj-cards { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .obj-card {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .obj-card-text { font-size: 14px; color: var(--text); line-height: 1.4; font-style: italic; flex: 1; }
+    .obj-vote-btns { display: flex; gap: 8px; flex-shrink: 0; }
+    .obj-vote {
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--muted); padding: 6px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .obj-vote:hover { border-color: var(--accent2); color: var(--text); }
+    .obj-vote.selected-real { background: rgba(0,212,170,0.15); border-color: var(--accent2); color: var(--accent2); }
+    .obj-vote.selected-smoke { background: rgba(255,107,107,0.15); border-color: var(--accent3); color: var(--accent3); }
+    .obj-verdict { font-size: 12px; margin-top: 6px; display: none; line-height: 1.5; }
+    .obj-verdict.show { display: block; }
+    .obj-verdict.real { color: var(--accent2); }
+    .obj-reveal { font-size: 13px; margin-top: 8px; line-height: 1.5; padding: 8px 12px; border-radius: 8px; }
+    .obj-correct { color: var(--accent2); background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.3); }
+    .obj-wrong { color: var(--accent3); background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3); }
+    .bond-kill-pill.clicked { border-color: var(--accent3); color: var(--accent3); background: rgba(255,107,107,0.1); }
+    .obj-verdict.smoke { color: var(--accent3); }
+
+    /* ════════════════════════════════════════════════════
+       REFERRAL + FOLLOW-UP SLIDES
+    ════════════════════════════════════════════════════ */
+    .slide-referral, .slide-followup {
+      background: radial-gradient(ellipse at 50% 40%, #0f1a0a 0%, var(--bg) 70%);
+      padding: 48px 64px 90px;
+      align-items: flex-start; text-align: left; gap: 0;
+    }
+    .referral-headline, .followup-headline {
+      font-size: clamp(26px,4vw,44px); font-weight: 900;
+      background: linear-gradient(135deg, #fff 30%, var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 6px;
+    }
+    .referral-sub, .followup-sub {
+      font-size: 15px; color: var(--muted); margin-bottom: 24px;
+    }
+    .say-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      width: 100%; max-width: 860px; margin-bottom: 20px;
+    }
+    .say-card {
+      border-radius: 14px; padding: 22px 20px; text-align: left;
+    }
+    .say-card.dont { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3); }
+    .say-card.do   { background: rgba(0,212,170,0.08);  border: 1px solid rgba(0,212,170,0.3);  }
+    .say-label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 10px; font-weight: 700;
+    }
+    .say-card.dont .say-label { color: var(--accent3); }
+    .say-card.do   .say-label { color: var(--accent2); }
+    .say-card p { font-size: 14px; color: var(--text); line-height: 1.6; font-style: italic; }
+
+    .key-phrase {
+      background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 14px; padding: 20px 24px; max-width: 860px; width: 100%;
+      margin-bottom: 16px;
+    }
+    .key-phrase-label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px; font-weight: 700;
+    }
+    .key-phrase p {
+      font-size: clamp(15px,2vw,20px); color: #fff; font-weight: 700; line-height: 1.5;
+      font-style: italic;
+    }
+
+    .followup-steps {
+      display: flex; flex-direction: column; gap: 10px;
+      width: 100%; max-width: 820px;
+    }
+    .followup-step {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 4px solid var(--gold);
+      border-radius: 12px; padding: 14px 18px;
+    }
+    .followup-step:nth-child(2) { border-left-color: var(--accent2); }
+    .followup-step:nth-child(3) { border-left-color: var(--accent); }
+    .followup-step:nth-child(4) { border-left-color: var(--accent3); }
+    .followup-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .followup-step h5 { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+    .followup-step p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .followup-step:nth-child(1) h5 { color: var(--gold); }
+    .followup-step:nth-child(2) h5 { color: var(--accent2); }
+    .followup-step:nth-child(3) h5 { color: var(--accent); }
+    .followup-step:nth-child(4) h5 { color: var(--accent3); }
+
+    /* ════════════════════════════════════════════════════
+       SCENARIO SELECT SCREEN
+    ════════════════════════════════════════════════════ */
+    .slide-scenario-select {
+      background: radial-gradient(ellipse at 50% 30%, #0d0520 0%, var(--bg) 70%);
+      gap: 20px;
+    }
+    .scenario-select-eyebrow {
+      font-size: 11px; letter-spacing: 5px; text-transform: uppercase; color: var(--accent);
+    }
+    .scenario-select-title {
+      font-size: clamp(32px,5vw,64px); font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, #fff 20%, var(--accent) 80%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .scenario-select-sub { font-size: 15px; color: var(--muted); }
+    .scenario-menu {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+      max-width: 900px; width: 100%;
+    }
+    .scenario-menu-btn {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 16px; text-align: left;
+      cursor: pointer; transition: border-color 0.2s, transform 0.15s;
+    }
+    .scenario-menu-btn:hover { transform: translateY(-2px); }
+    .scenario-menu-btn .smb-emoji { font-size: 26px; display: block; margin-bottom: 8px; }
+    .scenario-menu-btn .smb-name { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .scenario-menu-btn .smb-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+    /* ════════════════════════════════════════════════════
+       SCENARIO SLIDES  (the 6 "Prospect Walks In" slides)
+    ════════════════════════════════════════════════════ */
+    .slide-scenario {
+      background: var(--bg);
+      padding: 0;
+      align-items: stretch;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    /* Left panel — character */
+    .sc-left {
+      width: 320px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: flex-start;
+      padding: 48px 36px;
+      position: relative;
+    }
+    .sc-left::after {
+      content: '';
+      position: absolute; right: 0; top: 0; bottom: 0; width: 1px;
+      background: var(--border);
+    }
+
+    .sc-scenario-num {
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 16px;
+    }
+    .sc-avatar { font-size: 64px; margin-bottom: 16px; line-height: 1; }
+    .sc-char-name {
+      font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 4px;
+    }
+    .sc-char-role { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.4; }
+
+    .sc-tag {
+      display: inline-block; border-radius: 20px;
+      font-size: 11px; font-weight: 700; padding: 4px 12px;
+      border: 1px solid; margin-bottom: 6px;
+    }
+    .sc-setting-label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px; margin-top: 16px;
+    }
+    .sc-setting {
+      font-size: 13px; color: var(--text); line-height: 1.5;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+    }
+
+    /* Right panel — stage tabs */
+    .sc-right {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 40px 48px 80px; overflow-y: auto;
+    }
+    .sc-tabs {
+      display: flex; gap: 0; margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sc-tab {
+      padding: 10px 20px; font-size: 13px; font-weight: 700;
+      color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: -1px;
+    }
+    .sc-tab.active { color: #fff; border-bottom-color: var(--accent); }
+    .sc-panel { display: none; }
+    .sc-panel.active { display: block; }
+
+    .sc-panel-title {
+      font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 8px;
+    }
+    .sc-panel-desc {
+      font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px;
+      max-width: 560px;
+    }
+
+    /* Hidden objection flip card */
+    .sc-objection-wrapper { perspective: 600px; margin-bottom: 20px; }
+    .sc-objection-inner {
+      width: 100%; min-height: 80px;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+      position: relative;
+    }
+    .sc-objection-inner.flipped { transform: rotateY(180deg); }
+    .sc-obj-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px 20px;
+    }
+    .sc-obj-front {
+      background: var(--card); border: 2px dashed var(--border);
+      cursor: pointer; flex-direction: column; gap: 6px;
+      transition: border-color 0.2s;
+    }
+    .sc-obj-front:hover { border-color: var(--accent3); }
+    .sc-obj-front-label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent3); }
+    .sc-obj-front-hint { font-size: 12px; color: var(--muted); }
+    .sc-obj-back {
+      transform: rotateY(180deg);
+      background: rgba(255,107,107,0.08); border: 2px solid var(--accent3);
+      text-align: left; align-items: flex-start; flex-direction: column; gap: 6px;
+    }
+    .sc-obj-back-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent3); }
+    .sc-obj-back-text { font-size: 15px; color: var(--text); font-style: italic; font-weight: 600; }
+
+    /* Coaching bench */
+    .sc-bench-label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .sc-bench-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .sc-bench-score {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .sc-bench-score span { font-size: 10px; color: var(--muted); }
+    .sc-score-btns { display: flex; gap: 4px; }
+    .sc-score-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--card);
+      font-size: 14px; cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sc-score-btn:hover { border-color: var(--accent2); }
+    .sc-score-btn.scored-up { background: rgba(0,212,170,0.2); border-color: var(--accent2); }
+    .sc-score-btn.scored-down { background: rgba(255,107,107,0.2); border-color: var(--accent3); }
+
+    /* Debrief panel */
+    .sc-debrief {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .sc-debrief-q {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 4px solid var(--accent); border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .sc-debrief-q p { font-size: 14px; color: var(--text); line-height: 1.5; }
+    .sc-debrief-q:nth-child(2) { border-left-color: var(--accent2); }
+    .sc-debrief-q:nth-child(3) { border-left-color: var(--gold); }
+
+    /* ════════════════════════════════════════════════════
+       ACTIVITIES: PASSIVE TECHNIQUE SLIDES (18,19,21,22)
+    ════════════════════════════════════════════════════ */
+    .build-box, .spot-box, .potato-box, .pace-box {
+      margin-top: 18px; max-width: 760px; width: 100%;
+    }
+    .build-box.hidden, .spot-box.hidden, .potato-box.hidden, .pace-box.hidden { display: none; }
+    .activity-label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px; font-weight: 700;
+    }
+    .build-stmt {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; padding: 16px 20px;
+      font-size: 15px; color: var(--text); line-height: 1.5;
+      font-style: italic; margin-bottom: 14px;
+    }
+    .build-reveal { margin-top: 10px; }
+    .build-reveal.hidden { display: none; }
+    .build-answer {
+      background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.3);
+      border-radius: 12px; padding: 16px 20px;
+      font-size: 15px; color: var(--text); line-height: 1.5;
+      font-style: italic;
+    }
+    .build-answer em { color: var(--accent2); font-style: normal; font-weight: 700; }
+
+    /* Spot-it */
+    .spot-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+    .spot-option {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; padding: 14px 18px; cursor: pointer;
+      font-size: 14px; color: var(--text); line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    .spot-option:hover { border-color: var(--accent); }
+    .spot-option.correct { border-color: var(--accent2); background: rgba(0,212,170,0.08); }
+    .spot-option.wrong { border-color: var(--accent3); background: rgba(255,107,107,0.08); }
+    .spot-explain {
+      font-size: 13px; color: var(--accent2); line-height: 1.5;
+      background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.25);
+      border-radius: 10px; padding: 12px 16px; margin-top: 6px;
+    }
+    .spot-explain.hidden { display: none; }
+
+    /* Hot Potato */
+    .potato-q {
+      background: var(--card); border: 2px solid var(--accent3);
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+    }
+    .potato-q-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent3); margin-bottom: 6px; }
+    .potato-q-text { font-size: 16px; color: var(--text); line-height: 1.5; font-style: italic; }
+    .potato-reveal { margin-top: 8px; }
+    .potato-reveal.hidden { display: none; }
+    .potato-answer {
+      background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.3);
+      border-radius: 12px; padding: 14px 18px; font-size: 14px; color: var(--accent2);
+      font-style: italic; font-weight: 600;
+    }
+    .potato-nav { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
+    .potato-count { font-size: 12px; color: var(--muted); }
+
+    /* Future Pace */
+    .pace-weak {
+      background: var(--card); border: 2px solid var(--accent3);
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+      font-size: 15px; color: var(--text); line-height: 1.5; font-style: italic;
+    }
+    .pace-reveals { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .pace-reveals.hidden { display: none; }
+    .pace-answer {
+      background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.3);
+      border-radius: 12px; padding: 14px 18px; font-size: 14px; color: var(--text);
+      line-height: 1.5; font-style: italic;
+    }
+    .pace-answer em { color: var(--accent2); font-style: normal; font-weight: 700; }
+
+    /* ════════════════════════════════════════════════════
+       KEYBOARD HINT + SPEAKER NOTES
+    ════════════════════════════════════════════════════ */
+    #hint {
+      position: fixed; top: 24px; left: 24px;
+      font-size: 12px; color: var(--muted); z-index: 100;
+      display: flex; gap: 8px; align-items: center;
+    }
+
+    .key {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 2px 8px; font-size: 12px;
+    }
+
+    /* Speaker notes — hidden until 'N' toggles body.show-notes */
+    .notes {
+      position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%);
+      width: min(820px, 90vw); background: rgba(10,10,15,0.96);
+      border: 1px solid var(--accent); border-radius: 14px;
+      padding: 18px 24px; font-size: 14px; line-height: 1.6; color: var(--text);
+      text-align: left; z-index: 90; display: none;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+    .notes::before {
+      content: 'SPEAKER NOTES'; display: block; font-size: 10px; letter-spacing: 2px;
+      color: var(--accent); margin-bottom: 8px;
+    }
+    body.show-notes .slide.active .notes { display: block; }
+  </style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="hint">
+  <span class="key">←</span>
+  <span class="key">→</span>
+  <span style="margin-left:4px">navigate ·</span>
+  <span class="key">Space</span>
+  <span>activity ·</span>
+  <span class="key">N</span>
+  <span>notes</span>
+</div>
+
+<div id="deck">
+
+  <!-- ═══════════ Slide 1: TITLE ═══════════ -->
+  <div class="slide slide-title active">
+    <div class="overline">Intern Orientation · Sales Track</div>
+    <h1>The Art &amp; Science<br>of Selling</h1>
+    <p class="subtitle">A practical intro to the fundamentals that separate top earners from everyone else — no natural talent required.</p>
+    <span class="badge">Based on Tom Hopkins · How to Master the Art of Selling</span>
+    <div class="notes">Welcome them in. Set the tone: this is a skill, not a gift. Everything tonight is repeatable. Promise them they'll leave able to do things they can't do right now.</div>
+  </div>
+
+  <!-- ═══════════ Slide 3: 5 ADVANTAGES ═══════════ -->
+  <div class="slide slide-list">
+    <h2>5 Advantages of a Sales Career</h2>
+    <div class="list-grid">
+      <div class="list-item">
+        <div class="list-num">1</div>
+        <div class="list-text">
+          <strong>Freedom of Expression</strong>
+          <span>Your personality is your most powerful tool — not a liability.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">2</div>
+        <div class="list-text">
+          <strong>Absolute Control Over Success</strong>
+          <span>One of the few professions where your results are entirely up to you.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">3</div>
+        <div class="list-text">
+          <strong>Built for Competitors</strong>
+          <span>Constant challenges, daily pressure. Pressure makes diamonds.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">4</div>
+        <div class="list-text">
+          <strong>High ROI on Low Capital</strong>
+          <span>No franchise fees. No 60-hour weeks hoping for a $60k year-2 return.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">5</div>
+        <div class="list-text">
+          <strong>It Should Be Fun</strong>
+          <span>If it's not fun, it's not worth doing. Very few professionals can say that.</span>
+        </div>
+      </div>
+    </div>
+    <div class="notes">Walk each one. Linger on #2 — control. Most jobs, your ceiling is set by someone else. Here it's set by your activity. Tie #5 back to energy: fun people sell more.</div>
+  </div>
+
+  <!-- ═══════════ Slide 4: QUOTE ═══════════ -->
+  <div class="slide slide-quote">
+    <p class="big-quote"><span class="qg">"Sales is not something you're born with. </span><span class="qg">It's a skill — acquired, trained, </span><span class="qg">and refined until it becomes automatic."</span></p>
+    <p class="quote-attr">The Champion's Mindset</p>
+    <div class="notes">Kill the "natural-born salesman" myth here. Everyone in the room can learn this. The only variable is reps. Let the line breathe before you move on.</div>
+  </div>
+
+  <!-- ═══════════ Slide 6: FAST FIVESOME ═══════════ -->
+  <div class="slide slide-list">
+    <h2>The Learning Fast Fivesome</h2>
+    <div class="list-grid">
+      <div class="list-item">
+        <div class="list-num">1</div>
+        <div class="list-text">
+          <strong>Impact</strong>
+          <span>Visualize WHY you're learning it. Anchor the lesson to a result you want.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">2</div>
+        <div class="list-text">
+          <strong>Repetition</strong>
+          <span>Reps are the mother of learning. Intentional consistency builds habit.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">3</div>
+        <div class="list-text">
+          <strong>Utilization</strong>
+          <span>Use it or lose it. Apply what you learn immediately in the real world.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">4</div>
+        <div class="list-text">
+          <strong>Internalization</strong>
+          <span>Take the textbook talk and translate it into your own language. Own it.</span>
+        </div>
+      </div>
+      <div class="list-item">
+        <div class="list-num">5</div>
+        <div class="list-text">
+          <strong>Reinforcement</strong>
+          <span>When you level up, revisit the foundation that got you there. Never abandon the basics.</span>
+        </div>
+      </div>
+    </div>
+    <div class="notes">Emphasize #4 internalization — scripts read like robots until you make them yours. Tonight's job is to internalize, not memorize.</div>
+  </div>
+
+  <!-- ═══════════ Slide 8: THE REVOLVER ═══════════ -->
+  <div class="slide slide-emotion-gun slide-activity" id="slide-revolver">
+
+    <div class="mode-toggle">
+      <button id="modeInfoBtn" class="active">INFO</button>
+      <button id="modeActivityBtn">ACTIVITY</button>
+    </div>
+
+    <div class="revolver-top-label">
+      <span class="revolver-eyebrow">The Emotional</span>
+      <h2 class="revolver-title">Revolver</h2>
+      <p class="revolver-tagline">Logic is a gun with no trigger. <em>Emotion pulls it every time.</em></p>
+    </div>
+
+    <div class="revolver-stage">
+      <svg class="gun-body-svg" viewBox="0 0 260 420" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3a3a5c"/>
+            <stop offset="100%" stop-color="#1e1e32"/>
+          </linearGradient>
+          <linearGradient id="gripGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4a2e10"/>
+            <stop offset="100%" stop-color="#1a0d04"/>
+          </linearGradient>
+          <filter id="metalShine">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+        </defs>
+        <rect x="108" y="106" width="148" height="26" rx="7" fill="url(#bGrad)" stroke="#4a4a72" stroke-width="1.5"/>
+        <rect x="108" y="102" width="148" height="7" rx="3" fill="#2e2e50"/>
+        <rect x="248" y="98" width="12" height="38" rx="4" fill="#1e1e38" stroke="#4a4a72" stroke-width="1"/>
+        <rect x="220" y="108" width="18" height="10" rx="2" fill="#13132a" stroke="#3a3a60" stroke-width="0.8"/>
+        <path d="M108 102 Q105 98 100 100 L98 138 Q98 148 108 152 L108 132Z" fill="url(#bGrad)" stroke="#3a3a5c" stroke-width="1"/>
+        <path d="M82 190 Q76 210 82 232 Q88 244 102 242 L106 210 L94 190Z" fill="#1e1e38" stroke="#3a3a58" stroke-width="1.2"/>
+        <path d="M94 198 Q96 212 94 226 Q95 228 98 226 Q100 212 98 198Z" fill="#6c63ff" opacity="0.9"/>
+        <rect x="96" y="88" width="14" height="22" rx="4" fill="#2a2a4a" stroke="#4a4a70" stroke-width="1"/>
+        <rect x="98" y="84" width="10" height="8" rx="2" fill="#3a3a62"/>
+        <line x1="96" y1="90" x2="110" y2="90" stroke="#1a1a30" stroke-width="1"/>
+        <path d="M82 190 Q78 196 74 212 L70 270 Q68 290 80 300 Q94 308 106 298 L110 248 Q112 224 106 210 L94 190Z" fill="url(#gripGrad2)" stroke="#5c3a18" stroke-width="1.5"/>
+        <line x1="77" y1="208" x2="106" y2="200" stroke="#5c3a18" stroke-width="0.7" opacity="0.5"/>
+        <line x1="76" y1="218" x2="108" y2="210" stroke="#5c3a18" stroke-width="0.7" opacity="0.5"/>
+        <line x1="75" y1="228" x2="109" y2="220" stroke="#5c3a18" stroke-width="0.7" opacity="0.5"/>
+        <line x1="74" y1="238" x2="109" y2="230" stroke="#5c3a18" stroke-width="0.7" opacity="0.5"/>
+        <line x1="73" y1="248" x2="108" y2="240" stroke="#5c3a18" stroke-width="0.7" opacity="0.5"/>
+        <line x1="73" y1="258" x2="105" y2="250" stroke="#5c3a18" stroke-width="0.7" opacity="0.5"/>
+        <line x1="73" y1="268" x2="100" y2="260" stroke="#5c3a18" stroke-width="0.7" opacity="0.5"/>
+        <circle cx="90" cy="234" r="4" fill="#2a1a08" stroke="#7a5a28" stroke-width="0.8"/>
+        <line x1="88" y1="234" x2="92" y2="234" stroke="#7a5a28" stroke-width="0.6"/>
+        <circle cx="100" cy="148" r="52" fill="#0d0d1a" stroke="#2a2a45" stroke-width="1"/>
+      </svg>
+      <div class="cylinder-wrap">
+        <canvas id="revolverCanvas" width="320" height="320"></canvas>
+        <div id="chamberCard" class="chamber-card hidden">
+          <div class="cc-icon" id="ccIcon"></div>
+          <div class="cc-body">
+            <div class="cc-name" id="ccName"></div>
+            <div class="cc-hook" id="ccHook"></div>
+            <div class="cc-ex" id="ccEx"></div>
+          </div>
+        </div>
+        <div id="muzzleFlash" class="muzzle-flash hidden"></div>
+      </div>
+      <div class="gun-controls">
+        <div class="fire-hint info-only">Click a chamber to inspect · Click FIRE to spin &amp; shoot</div>
+        <div class="activity-prompt activity-only hidden">Name this emotion + give a real-world sales example</div>
+        <button class="fire-btn" id="fireBtn">🔫 FIRE</button>
+        <div class="fired-emotion hidden info-only" id="firedEmotion"></div>
+        <div class="reveal-block activity-only hidden" id="revealBlock">
+          <div class="reveal-name" id="revealName"></div>
+          <div class="reveal-hook" id="revealHook"></div>
+        </div>
+        <button class="next-spin-btn activity-only hidden" id="nextSpinBtn">↻ Next spin</button>
+        <div class="gun-footer-stack info-only">
+          <div class="gfs-row positive-row">
+            <span class="gfs-dot" style="background:#00d4aa"></span>
+            <span><strong style="color:#00d4aa">Positive emotions</strong> trigger sales</span>
+          </div>
+          <div class="gfs-row negative-row">
+            <span class="gfs-dot" style="background:#ff6b6b"></span>
+            <span><strong style="color:#ff6b6b">Negative emotions</strong> destroy sales</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">INFO mode: hover the chambers, explain each emotion. ACTIVITY mode: hit SPIN, point at an intern, make them name the landed emotion and give a real sales example before you reveal.</div>
+  </div>
+
+  <!-- ═══════════ Slide 9: KNOW YOUR NICHE ═══════════ -->
+  <div class="slide slide-niche">
+    <h2 class="niche-headline">Know Your Niche</h2>
+    <p class="niche-sub">Load only the bullets that fit <em>your</em> cylinder</p>
+    <div class="niche-grid">
+      <div class="niche-card luxury">
+        <div class="niche-icon">🏎️</div>
+        <h3>Luxury Car Sales</h3>
+        <div class="niche-desc">A full revolver — every chamber loaded</div>
+        <div class="niche-bullets">
+          <span class="nbullet" style="border-color:#a78bfa;color:#a78bfa">💎 Vanity</span>
+          <span class="nbullet" style="border-color:#6c63ff;color:#6c63ff">✨ Style</span>
+          <span class="nbullet" style="border-color:#ffd700;color:#ffd700">🏆 Status</span>
+          <span class="nbullet" style="border-color:#00d4aa;color:#00d4aa">👥 Peer Pressure</span>
+          <span class="nbullet" style="border-color:#fb923c;color:#fb923c">👨‍👩‍👧 Family</span>
+          <span class="nbullet" style="border-color:#ff6b6b;color:#ff6b6b">❤️ Lifestyle</span>
+        </div>
+        <p class="niche-tip">Pull multiple triggers — layer the emotions. Each one loads the next.</p>
+      </div>
+      <div class="niche-divider"><div class="niche-vs">VS</div></div>
+      <div class="niche-card pipe">
+        <div class="niche-icon">🔧</div>
+        <h3>Plastic Piping<br><span style="font-size:13px;color:var(--muted);font-weight:400">for Sprinklers</span></h3>
+        <div class="niche-desc">One bullet. One trigger.</div>
+        <div class="niche-bullets">
+          <span class="nbullet" style="border-color:#38bdf8;color:#38bdf8;font-size:15px;padding:10px 28px">🔒 Security</span>
+        </div>
+        <p class="niche-tip">"Protect your property. Protect your investment. It works when it matters." That's it — don't overthink it.</p>
+      </div>
+    </div>
+    <div class="notes">Not every product fires every emotion. Match the bullet to the buyer. Luxury = layer many. Commodity = find the one that matters and hit it clean.</div>
+  </div>
+
+  <!-- ═══════════ Slide 11+12 MERGED: THE 7 BASICS ═══════════ -->
+  <div class="slide slide-content">
+    <h2 style="font-size:clamp(24px,3.5vw,42px);font-weight:800;margin-bottom:20px;background:linear-gradient(135deg,#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">The 7 Basics of a Champion</h2>
+    <div class="steps-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 14px;">
+      <div class="step-card stagger-item" data-num="1">
+        <h4>Prospecting</h4>
+        <p>Don't wait for leads. Actively seek prospects through every channel. Every interaction is an opportunity to build awareness and credibility.</p>
+      </div>
+      <div class="step-card stagger-item" data-num="2">
+        <h4>Original Contact</h4>
+        <p>Make a strong first impression — even outside sales settings. Remember details to connect more meaningfully in follow-ups.</p>
+      </div>
+      <div class="step-card stagger-item" data-num="3">
+        <h4>Qualification</h4>
+        <p>Filter your time to people who can say "yes." Spending time with unqualified prospects is the fastest way to burn out and underperform.</p>
+      </div>
+      <div class="step-card stagger-item" data-num="4">
+        <h4>Presentation</h4>
+        <p>Make them feel like your product was built specifically for them. Tailor every pitch to their specific needs and language.</p>
+      </div>
+    </div>
+    <div class="steps-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="step-card stagger-item" data-num="5">
+        <h4>Handling Objections</h4>
+        <p>Anticipate every objection before it arrives. Respond with confidence, empathy, and clear value. Turn "no" into "not yet — tell me more."</p>
+      </div>
+      <div class="step-card stagger-item" data-num="6">
+        <h4>Closing the Sale</h4>
+        <p>The close is the natural conclusion of a well-run process. Use trial closes throughout. Read buying signals. Never fear asking — you're helping them decide.</p>
+      </div>
+      <div class="step-card stagger-item" data-num="7">
+        <h4>Referrals</h4>
+        <p>The close of one sale opens the next. A warm referral is exponentially more valuable than any cold prospect. Protect every relationship like gold.</p>
+      </div>
+    </div>
+    <div class="notes">Qualification is where new reps waste the most time. Hammer it: time spent with unqualified prospects is the #1 cause of burnout.</div>
+  </div>
+
+  <!-- ═══════════ Slide 14: COLD OPEN RANKER ═══════════ -->
+  <div class="slide slide-ranker slide-activity" id="slide-ranker">
+    <h2 class="ranker-title">Rank These Openers</h2>
+    <p class="ranker-sub">Click them best → worst</p>
+    <div class="ranker-list" id="rankerList">
+      <div class="rank-card" data-id="1" data-correct="3" data-cls="bad" data-verdict="Weak — feature-first. They don't care about your platform yet.">
+        <div class="rank-stamp">–</div>
+        <div>
+          <div class="rank-line">"Hi, I'm calling about our new platform—"</div>
+          <div class="rank-verdict"></div>
+        </div>
+      </div>
+      <div class="rank-card" data-id="2" data-correct="1" data-cls="good" data-verdict="Strong — problem-first, brief, ends on a question they want to answer.">
+        <div class="rank-stamp">–</div>
+        <div>
+          <div class="rank-line">"I'll be brief — most [role]s I talk to are losing 2 hours a day to [problem]. Sound familiar?"</div>
+          <div class="rank-verdict"></div>
+        </div>
+      </div>
+      <div class="rank-card" data-id="3" data-correct="4" data-cls="bad" data-verdict="Weak — hands them an easy no before you've said anything.">
+        <div class="rank-stamp">–</div>
+        <div>
+          <div class="rank-line">"Do you have a minute?"</div>
+          <div class="rank-verdict"></div>
+        </div>
+      </div>
+      <div class="rank-card" data-id="4" data-correct="2" data-cls="good" data-verdict="Strong — personalized, earns the right to keep talking.">
+        <div class="rank-stamp">–</div>
+        <div>
+          <div class="rank-line">"I noticed your team just expanded — congrats. We help teams like yours..."</div>
+          <div class="rank-verdict"></div>
+        </div>
+      </div>
+      <div class="rank-card" data-id="5" data-correct="5" data-cls="bad" data-verdict="Weak — all about you. Nothing in it for them.">
+        <div class="rank-stamp">–</div>
+        <div>
+          <div class="rank-line">"I wanted to reach out because—"</div>
+          <div class="rank-verdict"></div>
+        </div>
+      </div>
+    </div>
+    <button class="activity-btn reveal-rank-btn hidden" id="revealRankBtn">Reveal correct order</button>
+    <button class="quiz-reset hidden" id="rankerResetBtn">↻ Try again</button>
+    <div class="notes">Let an intern rank live. First click = best. After all 5, hit Reveal — cards reorder to the right ranking. Discuss why each lands where it does.</div>
+  </div>
+
+  <!-- ═══════════ Slide 15: OPEN QUESTIONS ═══════════ -->
+  <div class="slide slide-content">
+    <h2 style="font-size:clamp(20px,3vw,32px);font-weight:700;margin-bottom:24px;color:#fff;">Open Questions — Use <span style="color:var(--accent2)">WWWWWH</span></h2>
+    <p style="font-size:15px;color:var(--muted);margin-bottom:24px;max-width:700px;">Force the prospect to think — not just give a reflex yes/no. These open the door.</p>
+    <div class="two-col" style="grid-template-columns:1fr 1fr;">
+      <div class="col-card stagger-item">
+        <h3><span class="dot"></span>The Framework</h3>
+        <ul>
+          <li>Who will be using this the most?</li>
+          <li>What feature is most critical for you?</li>
+          <li>Where do you see this evolving?</li>
+          <li>When would you like this implemented?</li>
+          <li>Why are you investing in this now?</li>
+          <li>How do you see it benefiting your team?</li>
+        </ul>
+      </div>
+      <div class="col-card stagger-item">
+        <h3><span class="dot" style="background:var(--accent)"></span>Trading Simulator Examples</h3>
+        <ul>
+          <li>"Who will be using this software most frequently?"</li>
+          <li>"What's the most important feature you need?"</li>
+          <li>"When would you like this implemented by?"</li>
+          <li>"Why are you interested in a simulator now?"</li>
+          <li>"How do you see this benefiting your interns?"</li>
+        </ul>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:20px;font-style:italic;">"If I say it, they tend to doubt me. If they say it — it's true."</p>
+    <div class="notes">Open questions get them talking and selling themselves. WWWWWH is the cheat sheet. Closing line is the whole philosophy: let them say it.</div>
+  </div>
+
+  <!-- ═══════════ Slide 17: BOND BUILDING ═══════════ -->
+  <div class="slide slide-bond">
+    <h2 class="bond-headline">The Bond Framework</h2>
+    <p class="bond-sub">4 rules that make people want to buy from you specifically</p>
+    <div class="bond-grid">
+      <div class="bond-card">
+        <div class="bond-card-icon">🪞</div>
+        <h4>Mirror Their Energy</h4>
+        <p>Match their pace, not yours. A calm person doesn't want your enthusiasm — they want your confidence. Read the room before you open your mouth.</p>
+      </div>
+      <div class="bond-card">
+        <div class="bond-card-icon">🧠</div>
+        <h4>Remember Details</h4>
+        <p>Use their name. Reference something they said earlier in the conversation. Nothing says "I care" like showing you actually listened.</p>
+      </div>
+      <div class="bond-card">
+        <div class="bond-card-icon">🤝</div>
+        <h4>Find Real Common Ground</h4>
+        <p>One genuine shared thing beats ten polished opening lines. People feel shared identity instantly — and it breaks the rep/prospect wall.</p>
+      </div>
+      <div class="bond-card">
+        <div class="bond-card-icon">👂</div>
+        <h4>Listen More Than You Talk</h4>
+        <p>The prospect who talks most is the prospect who buys. Your job is to ask and listen — not to present. The presentation comes after they've sold themselves.</p>
+      </div>
+    </div>
+
+    <button class="activity-btn" id="bondKillBtn" style="margin-top:20px;">Bond Killers →</button>
+    <div class="bond-kill-box hidden" id="bondKillBox">
+      <div class="quiz-label">Quick Fire — What kills a bond fastest?</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Click each one — group shouts why it's deadly</p>
+      <div class="bond-kills">
+        <div class="bond-kill-pill" data-explain="Interrupting shows you care more about your pitch than their answer. Instant trust killer.">Interrupting them</div>
+        <div class="bond-kill-pill" data-explain="Generic openers like 'How are you?' signal you don't know them and didn't prepare.">Generic openers</div>
+        <div class="bond-kill-pill" data-explain="Talking about yourself first puts you in pitch mode before you've earned their attention.">Talking about yourself</div>
+        <div class="bond-kill-pill" data-explain="Desperation is felt, not seen. High pressure = low trust = no sale.">Being too eager</div>
+        <div class="bond-kill-pill" data-explain="If you can't remember what they said 2 minutes ago, why would they trust you with their money?">Forgetting what they said</div>
+      </div>
+      <div class="bond-kill-reveal" id="bondKillReveal"></div>
+    </div>
+    <div class="notes">Teach the 4 rules, then run Bond Killers. Click each pill — have the group explain why it's deadly before you show the explanation. High energy, fast pace.</div>
+  </div>
+
+  <!-- ═══════════ Slide 19: OBJECTION FRAMEWORK ═══════════ -->
+  <div class="slide slide-objection">
+    <h2 class="obj-headline">5-Step Objection Framework</h2>
+    <p class="obj-sub">Never freestyle it — run the process every single time</p>
+    <div class="obj-steps">
+      <div class="obj-step">
+        <div class="obj-step-num">1</div>
+        <div>
+          <h5>Hear Them Out Fully</h5>
+          <p>Never interrupt. Let them finish completely. Silence after an objection is not weakness — it's respect, and it makes them feel heard.</p>
+        </div>
+      </div>
+      <div class="obj-step">
+        <div class="obj-step-num">2</div>
+        <div>
+          <h5>Cushion It</h5>
+          <p><em>"I understand how you feel — a lot of people I work with felt the same way at first."</em> Empathy before argument, every time.</p>
+        </div>
+      </div>
+      <div class="obj-step">
+        <div class="obj-step-num">3</div>
+        <div>
+          <h5>Clarify — Real or Smokescreen?</h5>
+          <p><em>"Is that the main thing holding you back?"</em> If yes, it's real. If they hesitate — it's a smokescreen. Find the real one.</p>
+        </div>
+      </div>
+      <div class="obj-step">
+        <div class="obj-step-num">4</div>
+        <div>
+          <h5>Answer With Value, Not Defense</h5>
+          <p>Don't argue. Don't justify. Show them the value that makes the objection irrelevant. Bridge to what they told you they actually want.</p>
+        </div>
+      </div>
+      <div class="obj-step">
+        <div class="obj-step-num">5</div>
+        <div>
+          <h5>Confirm and Continue</h5>
+          <p><em>"Does that make sense? So if we can handle that — are we good to move forward?"</em> Close the loop, don't leave it open.</p>
+        </div>
+      </div>
+    </div>
+
+    <button class="activity-btn" id="objActivityBtn">Objection or Smokescreen? →</button>
+    <div class="obj-activity-box hidden" id="objActivityBox">
+      <div class="quiz-label">Group Vote — Real Objection or Stalling?</div>
+      <div class="obj-cards" id="objCards">
+        <div class="obj-card" data-real="smoke" data-explain="Smokescreen — 'Let me think' almost always means 'I'm not convinced yet.' The real objection is buried. Ask: 'What specifically would you need to think through?'">
+          <div class="obj-card-text">"Let me think about it and get back to you."</div>
+          <div class="obj-vote-btns">
+            <button class="obj-vote" data-val="real">Real</button>
+            <button class="obj-vote" data-val="smoke">Smokescreen</button>
+          </div>
+        </div>
+        <div class="obj-card" data-real="real" data-explain="Real — they have a specific financial constraint. Engage it directly: find a payment structure, a scaled version, or reframe the ROI.">
+          <div class="obj-card-text">"We don't have budget approved for this quarter."</div>
+          <div class="obj-vote-btns">
+            <button class="obj-vote" data-val="real">Real</button>
+            <button class="obj-vote" data-val="smoke">Smokescreen</button>
+          </div>
+        </div>
+        <div class="obj-card" data-real="smoke" data-explain="Smokescreen — 'My partner' is often deflection. Real question: does the partner even exist in this decision? Ask: 'If it were entirely your call, what would you do?'">
+          <div class="obj-card-text">"I need to run this by my partner first."</div>
+          <div class="obj-vote-btns">
+            <button class="obj-vote" data-val="real">Real</button>
+            <button class="obj-vote" data-val="smoke">Smokescreen</button>
+          </div>
+        </div>
+        <div class="obj-card" data-real="real" data-explain="Real — they have a competing tool they trust. Your job: don't attack it. Find out what it's missing. Sell what you do that it doesn't.">
+          <div class="obj-card-text">"We're already using a competitor's product."</div>
+          <div class="obj-vote-btns">
+            <button class="obj-vote" data-val="real">Real</button>
+            <button class="obj-vote" data-val="smoke">Smokescreen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">Teach the 5 steps, then run the group vote. For each objection, group shouts "Real" or "Smokescreen" — then click to reveal. Emphasize that smokescreens are the most common: they hide the real objection and kill the deal if you answer the wrong thing.</div>
+  </div>
+
+  <!-- ═══════════ Slide A: THE TIE-DOWNS (merged 21+22+23) ═══════════ -->
+  <div class="slide slide-content">
+    <h2 style="font-size:clamp(24px,3.5vw,42px);font-weight:800;margin-bottom:20px;background:linear-gradient(135deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">The Tie-Downs</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;max-width:900px;margin-bottom:20px;">
+      <div class="step-card stagger-item">
+        <h4>Tie-Down</h4>
+        <p style="font-style:italic;color:var(--accent2);margin-bottom:8px;">"Great product, isn't it?"</p>
+        <p>Appended to a statement to get a yes. Tag at the <strong>end</strong> — invites easy agreement and builds momentum.</p>
+      </div>
+      <div class="step-card stagger-item">
+        <h4>Inverted Tie-Down</h4>
+        <p style="font-style:italic;color:var(--accent2);margin-bottom:8px;">"Isn't it a great product?"</p>
+        <p>Leads with the question. Tag at the <strong>beginning</strong> — opens with empathy, prospect hears their pain reflected first.</p>
+      </div>
+      <div class="step-card stagger-item">
+        <h4>Internal Tie-Down</h4>
+        <p style="font-style:italic;color:var(--accent2);margin-bottom:8px;">"Because it's the best value, isn't it, you'd want to move forward?"</p>
+        <p>Embedded <strong>mid-sentence</strong> — keeps them nodding throughout a longer point. Harder to tune out.</p>
+      </div>
+    </div>
+    <button class="activity-btn" id="quizTriggerBtn">Test the room →</button>
+    <div class="quiz-box hidden" id="quizBox">
+      <div class="quiz-label">Quick Quiz</div>
+      <div class="quiz-instruction">Two of these are real tie-downs. One isn't. Click the one that's <strong>wrong</strong>.</div>
+      <div class="quiz-option" data-correct="true"><span>"It's important to feel confident in your investment, isn't it?"</span></div>
+      <div class="quiz-option" data-correct="true"><span>"This would save you time every single day, wouldn't it?"</span></div>
+      <div class="quiz-option" data-correct="false"><span>"You'd be crazy not to take this deal, right?"</span></div>
+      <div class="quiz-explain hidden" id="quizExplain">✗ "You'd be crazy not to..." is too aggressive. It creates <strong>pressure</strong>, not agreement. A tie-down should invite an easy "yes," not corner the prospect into one.</div>
+      <div class="quiz-hint hidden" id="quizHint">Look for the one that doesn't actually invite agreement.</div>
+      <button class="quiz-reset hidden" id="quizReset">↻ Try again</button>
+    </div>
+    <div class="notes">Walk through each type with a live example. Quiz: point at an intern to find the weak tie-down.</div>
+  </div>
+
+  <!-- ═══════════ Slide B: THE CLOSE OPENERS (merged 24+25+26) ═══════════ -->
+  <div class="slide slide-content">
+    <h2 style="font-size:clamp(24px,3.5vw,42px);font-weight:800;margin-bottom:20px;background:linear-gradient(135deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">The Close Openers</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;max-width:900px;margin-bottom:20px;">
+      <div class="step-card stagger-item">
+        <h4>Alternative Option</h4>
+        <p style="font-style:italic;color:var(--accent2);margin-bottom:8px;">"Would Tuesday or Thursday work better?"</p>
+        <p>Give two choices, both move forward. Never ask <em>if</em> — ask <em>when and how</em>.</p>
+      </div>
+      <div class="step-card stagger-item">
+        <h4>Porcupine</h4>
+        <p style="font-style:italic;color:var(--accent2);margin-bottom:8px;">"Which color appeals to you most?"</p>
+        <p>Answer a question with a question. "What color did you have in mind?" → bounce it back. Makes them reveal their own urgency.</p>
+      </div>
+      <div class="step-card stagger-item">
+        <h4>Involvement Question</h4>
+        <p style="font-style:italic;color:var(--accent2);margin-bottom:8px;">"Where would you put this in your office?"</p>
+        <p>Picture them owning it. Moves them from "should I buy" to "how do I use it" before you close.</p>
+      </div>
+    </div>
+    <button class="activity-btn" id="potatoBtn">Hot Potato →</button>
+    <div class="potato-box hidden" id="potatoBox">
+      <div class="activity-label">Hot Potato — Bounce it back as a Porcupine</div>
+      <div class="potato-q">
+        <div class="potato-q-label">Prospect asks</div>
+        <div class="potato-q-text" id="potatoQText"></div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">An intern bounces it back. Then reveal the ideal porcupine response.</p>
+      <div class="potato-reveal hidden" id="potatoReveal">
+        <div class="activity-label" style="color:var(--accent2)">Ideal Porcupine Response</div>
+        <div class="potato-answer" id="potatoAnswer"></div>
+      </div>
+      <div class="potato-nav">
+        <button class="quiz-reset" id="potatoRevealBtn">Reveal Response</button>
+        <button class="quiz-reset" id="potatoNextBtn">Next Question →</button>
+        <span class="potato-count" id="potatoCount"></span>
+      </div>
+    </div>
+    <div class="notes">These are your openers into the close. Hot Potato drill: bounce each prospect question back as a porcupine.</div>
+  </div>
+
+  <!-- ═══════════ Slide 27: 3 PRINCIPLES ═══════════ -->
+  <div class="slide slide-closing">
+    <h2 class="closing-headline">3 Principles of Question Power</h2>
+    <p style="font-size:16px;color:var(--muted);margin-bottom:8px;max-width:680px;">The rules that determine whether your questions move the deal forward or stall it.</p>
+    <div class="principles-row">
+      <div class="principle-badge">
+        <span class="icon">🤝</span>
+        <strong style="color:#fff;display:block;margin-bottom:6px;font-size:15px;">Build the Bond First</strong>
+        <span style="font-size:13px;color:var(--muted);">Always establish rapport before going for power questions.</span>
+      </div>
+      <div class="principle-badge">
+        <span class="icon">🎯</span>
+        <strong style="color:#fff;display:block;margin-bottom:6px;font-size:15px;">Design for Desirable Answers</strong>
+        <span style="font-size:13px;color:var(--muted);">Every question should move the conversation toward a sale — never a dead end.</span>
+      </div>
+      <div class="principle-badge">
+        <span class="icon">🔄</span>
+        <strong style="color:#fff;display:block;margin-bottom:6px;font-size:15px;">Make the Decision First</strong>
+        <span style="font-size:13px;color:var(--muted);">You can't lead a prospect to a decision you haven't already made yourself.</span>
+      </div>
+    </div>
+    <div class="notes">Tie it together. Techniques fail without rapport. Every question must have a destination. And you lead from conviction — decide first, then guide them there.</div>
+  </div>
+
+  <!-- ═══════════ Slide 29: REFERRAL SCRIPT ═══════════ -->
+  <div class="slide slide-referral">
+    <h2 class="referral-headline">The Referral Script</h2>
+    <p class="referral-sub">Ask at peak satisfaction — immediately after the close, not days later</p>
+
+    <div class="key-phrase">
+      <div class="key-phrase-label">The Exact Phrase</div>
+      <p>"I'm really glad this worked out for you. Who's the one person you know who would benefit from the same experience?"</p>
+    </div>
+
+    <div class="say-grid">
+      <div class="say-card dont">
+        <div class="say-label">Don't Say</div>
+        <p>"Do you know anyone else who might be interested?"</p>
+      </div>
+      <div class="say-card do">
+        <div class="say-label">Say This</div>
+        <p>"Who's the one person you know who would benefit from the same experience?"</p>
+      </div>
+      <div class="say-card dont">
+        <div class="say-label">Don't Say</div>
+        <p>"Feel free to pass along my number if anyone comes to mind."</p>
+      </div>
+      <div class="say-card do">
+        <div class="say-label">Say This</div>
+        <p>"Can I reach out to them directly, or would you prefer to make the intro?"</p>
+      </div>
+    </div>
+
+    <div class="technique-why" style="margin-top:0;max-width:860px;">
+      <span class="why-icon">💡</span>
+      <span>"Anyone who might be interested" requires them to search their whole network. "The one person" is specific — they picture a face immediately. One name is a warm lead. Vague is a dead end.</span>
+    </div>
+    <div class="notes">The timing is everything — ask immediately after the close while they're at peak satisfaction. Do not wait. Practice the exact phrase: "Who's the ONE person..." — the word "one" does all the work.</div>
+  </div>
+
+  <!-- ═══════════ Slide 31: FOLLOW-UP FORMULA ═══════════ -->
+  <div class="slide slide-followup">
+    <h2 class="followup-headline">The Follow-Up Formula</h2>
+    <p class="followup-sub">A system beats willpower every time — run this process on every prospect</p>
+    <div class="followup-steps">
+      <div class="followup-step">
+        <div class="followup-icon">⚡</div>
+        <div>
+          <h5>The 24-Hour Rule</h5>
+          <p>Touch back within 24 hours of first contact, no exceptions. The longer you wait, the colder they get. Same-day is better than next-day.</p>
+        </div>
+      </div>
+      <div class="followup-step">
+        <div class="followup-icon">🎯</div>
+        <div>
+          <h5>Reference Something Specific</h5>
+          <p>Never say "just checking in." Reference something they actually told you: <em>"You mentioned the Q2 rollout — I wanted to share something relevant."</em> It proves you listened.</p>
+        </div>
+      </div>
+      <div class="followup-step">
+        <div class="followup-icon">🔁</div>
+        <div>
+          <h5>The 3-Touch Sequence</h5>
+          <p>Call → Email → Handwritten note (or personalized LinkedIn message). Each touch is a different medium. Don't just repeat the same channel three times.</p>
+        </div>
+      </div>
+      <div class="followup-step">
+        <div class="followup-icon">🚪</div>
+        <div>
+          <h5>Know When to Move On</h5>
+          <p>After 5 touches with zero response — one final message: <em>"I don't want to keep bothering you. If the timing changes, I'm here."</em> Then move on. Respect earns callbacks.</p>
+        </div>
+      </div>
+    </div>
+    <div class="notes">The 3-touch sequence is the key concept. Most reps treat follow-up as one call. Top reps treat it as a multi-channel relationship. Ask the group: what's the biggest mistake people make in follow-up? (Answer: "just checking in" — it gives them nothing to respond to.)</div>
+  </div>
+
+  <!-- ═══════════ Slide 39: FINAL CALLBACK CLOSE ═══════════ -->
+  <div class="slide slide-final">
+    <div class="overline">The Only Career With No Ceiling</div>
+    <p class="final-quote">"Eat what you kill. Bet on yourself with confidence."</p>
+    <p class="final-attr">Great risks · smart execution · there is no limit</p>
+    <div class="final-pills">
+      <span class="pill">Prospect Daily</span>
+      <span class="pill">Ask Better Questions</span>
+      <span class="pill">Handle Every Objection</span>
+      <span class="pill">Always Close</span>
+      <span class="pill">Earn Referrals</span>
+      <span class="pill">Never Stop Learning</span>
+    </div>
+    <span class="final-badge">Now let's put it to work.</span>
+    <button onclick="window.location.href='sales-training-game.html'" style="margin-top:32px;background:linear-gradient(135deg,#ffd700,#fb923c);color:#000;border:none;border-radius:14px;padding:16px 40px;font-size:18px;font-weight:900;cursor:pointer;letter-spacing:2px;box-shadow:0 4px 24px rgba(255,215,0,0.4);transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">Launch the Game →</button>
+    <div class="notes">Land the plane. Let it go quiet. The pills are their checklist — read them slowly as they pop in. End on "Now let's put it to work." and stop talking.</div>
+  </div>
+
+</div><!-- /#deck -->
+
+<!-- Navigation -->
+<div id="nav">
+  <button id="prev">← Prev</button>
+  <span id="slide-counter">1 / 1</span>
+  <button id="next">Next →</button>
+</div>
+
+<script>
+  /* ════════════════════════════════════════════════════
+     NAVIGATION + TRANSITION SYSTEM
+     goto(n, direction): adds .entering-forward / .entering-backward
+     to the incoming slide so CSS @keyframes re-fire on every visit.
+     The class is stripped after the longest entrance completes.
+  ════════════════════════════════════════════════════ */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const counter = document.getElementById('slide-counter');
+  const progress = document.getElementById('progress');
+
+  // Slides that ignore directional travel (sharp-cut activity + slow-rise final)
+  function isDirectionExempt(slide) {
+    return slide.classList.contains('slide-activity') || slide.classList.contains('slide-final');
+  }
+
+  function goto(n, direction) {
+    const target = Math.max(0, Math.min(n, total - 1));
+    if (target === current && direction !== 'init') {
+      // still refresh entrance if re-triggered, but normally no-op
+    }
+    const outgoing = slides[current];
+    const incoming = slides[target];
+
+    // default direction inference
+    if (!direction) direction = target >= current ? 'forward' : 'backward';
+
+    outgoing.classList.remove('active', 'entering-forward', 'entering-backward');
+    current = target;
+
+    // reset & re-add to force animation restart
+    incoming.classList.remove('entering-forward', 'entering-backward');
+    // force reflow so the animation class re-triggers reliably
+    void incoming.offsetWidth;
+    incoming.classList.add('active');
+
+    if (!isDirectionExempt(incoming)) {
+      incoming.classList.add(direction === 'backward' ? 'entering-backward' : 'entering-forward');
+    }
+
+    // Re-trigger quote word-group animations by toggling .anim-ready
+    if (incoming.classList.contains('slide-quote')) {
+      incoming.classList.remove('anim-ready');
+      void incoming.offsetWidth;
+      incoming.classList.add('anim-ready');
+    }
+
+    // cleanup class after entrance settles (1.6s covers the slowest staggered/final)
+    setTimeout(() => {
+      incoming.classList.remove('entering-forward', 'entering-backward');
+    }, 1700);
+
+    counter.textContent = `${current + 1} / ${total}`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    progress.style.width = `${((current + 1) / total) * 100}%`;
+  }
+
+  prevBtn.addEventListener('click', () => goto(current - 1, 'backward'));
+  nextBtn.addEventListener('click', () => goto(current + 1, 'forward'));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { goto(current + 1, 'forward'); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { goto(current - 1, 'backward'); }
+    else if (e.key === ' ' || e.code === 'Space') {
+      // Space triggers activity interactions on active activity slides
+      const active = slides[current];
+      if (active.classList.contains('slide-activity')) {
+        e.preventDefault();
+        handleActivitySpace(active);
+      }
+    } else if (e.key === 'n' || e.key === 'N') {
+      document.body.classList.toggle('show-notes');
+    }
+  });
+
+  // Dispatch Space to whichever activity owns the active slide
+  function handleActivitySpace(slide) {
+    if (slide.id === 'slide-revolver') revolverSpace();
+    else if (slide.id === 'slide-liverep') { document.getElementById('liverepDrawBtn') && !document.getElementById('liverepDrawBtn').classList.contains('hidden') ? document.getElementById('liverepDrawBtn').click() : document.getElementById('liverepAgainBtn') && document.getElementById('liverepAgainBtn').click(); }
+    // Ranker & countdown have their own conventions; countdown skip:
+    else if (slide.id === 'slide-ranker') { /* no space action */ }
+    // Alternative-option countdown lives on a technique slide, handled separately
+  }
+
+  goto(0, 'init');
+
+  /* ════════════════════════════════════════════════════
+     INTERACTIVE REVOLVER  (INFO mode preserved + ACTIVITY mode)
+  ════════════════════════════════════════════════════ */
+  let revolverSpace = function(){};   // assigned inside IIFE
+  (function() {
+    const canvas = document.getElementById('revolverCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const CX = W / 2, CY = H / 2;
+    const CYL_R = 118;   // cylinder radius
+    const CHAM_R = 30;   // chamber circle radius
+    const ORBIT = 72;    // orbit radius for chamber centers
+    const N = 7;
+
+    const emotions = [
+      { name: "Vanity",              icon: "💎", color: "#a78bfa", hook: "Make them feel special.", ex: "\"This is not for everyone — it’s for people who understand real quality.\"" },
+      { name: "Style",               icon: "✨", color: "#c084fc", hook: "Sell the image, not the item.", ex: "\"You’ll walk into any room and own it.\"" },
+      { name: "Peer Pressure",       icon: "👥", color: "#00d4aa", hook: "Everyone they respect has it.", ex: "\"Most top firms in your space already use this.\"" },
+      { name: "Keep Up with the Joneses", icon: "🏆", color: "#ffd700", hook: "Fear of being left behind.", ex: "\"Your competitors moved on this six months ago.\"" },
+      { name: "Health & Safety",     icon: "❤️", color: "#ff6b6b", hook: "Protect what matters most.", ex: "\"This isn’t a cost — it’s protection.\"" },
+      { name: "Family",              icon: "👨‍👩‍👧", color: "#fb923c", hook: "Do it for the people you love.", ex: "\"Think about what this means for your kids’ future.\"" },
+      { name: "Security",            icon: "🔒", color: "#38bdf8", hook: "Take the risk off the table.", ex: "\"You’ll never have to worry about this again.\"" },
+    ];
+
+    let rotation = 0;
+    let targetRot = 0;
+    let animating = false;
+    let hoveredIdx = -1;
+    let activeIdx = -1;
+    let mode = 'info';        // 'info' | 'activity'
+    let revealed = false;     // activity-mode: has the landed emotion been revealed?
+
+    function chamberPos(i) {
+      const angle = rotation + (i * 2 * Math.PI / N) - Math.PI / 2;
+      return { x: CX + ORBIT * Math.cos(angle), y: CY + ORBIT * Math.sin(angle), angle };
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Outer cylinder body
+      const cylGrad = ctx.createRadialGradient(CX - 20, CY - 20, 10, CX, CY, CYL_R);
+      cylGrad.addColorStop(0, '#3a3a5c');
+      cylGrad.addColorStop(1, '#12121e');
+      ctx.beginPath();
+      ctx.arc(CX, CY, CYL_R, 0, Math.PI * 2);
+      ctx.fillStyle = cylGrad;
+      ctx.fill();
+      ctx.strokeStyle = '#3a3a60';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Groove ring
+      ctx.beginPath();
+      ctx.arc(CX, CY, CYL_R - 6, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 7 Chambers
+      for (let i = 0; i < N; i++) {
+        const { x, y } = chamberPos(i);
+        const em = emotions[i];
+        const isHov = i === hoveredIdx;
+        const isFired = i === activeIdx;
+        // In activity mode, hide the name/emoji is handled below; emoji always drawn,
+        // name only appears on reveal in the side panel.
+
+        if (isHov || isFired) {
+          ctx.save();
+          ctx.shadowColor = em.color;
+          ctx.shadowBlur = isFired ? 28 : 14;
+          ctx.beginPath();
+          ctx.arc(x, y, CHAM_R + 3, 0, Math.PI * 2);
+          ctx.strokeStyle = em.color;
+          ctx.lineWidth = isFired ? 3 : 2;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        const cGrad = ctx.createRadialGradient(x - 6, y - 6, 2, x, y, CHAM_R);
+        cGrad.addColorStop(0, '#2a2a48');
+        cGrad.addColorStop(1, '#0d0d1a');
+        ctx.beginPath();
+        ctx.arc(x, y, CHAM_R, 0, Math.PI * 2);
+        ctx.fillStyle = cGrad;
+        ctx.fill();
+        ctx.strokeStyle = isHov ? em.color : (isFired ? em.color : '#3a3a60');
+        ctx.lineWidth = isHov ? 2.5 : 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x, y, CHAM_R * 0.42, 0, Math.PI * 2);
+        ctx.fillStyle = '#06060f';
+        ctx.fill();
+        ctx.strokeStyle = em.color + '88';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Emoji — always shown (activity mode reveals only the NAME on demand)
+        ctx.font = `${isHov ? 18 : 16}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(em.icon, x, y);
+      }
+
+      // Center pin
+      const pinGrad = ctx.createRadialGradient(CX - 3, CY - 3, 1, CX, CY, 14);
+      pinGrad.addColorStop(0, '#6c63ff');
+      pinGrad.addColorStop(1, '#1a1a2e');
+      ctx.beginPath();
+      ctx.arc(CX, CY, 14, 0, Math.PI * 2);
+      ctx.fillStyle = pinGrad;
+      ctx.fill();
+      ctx.strokeStyle = '#6c63ff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(CX, CY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+
+      // Barrel alignment indicator at 9 o'clock
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(CX - CYL_R - 4, CY, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#6c63ff';
+      ctx.shadowColor = '#6c63ff';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function animate() {
+      const diff = targetRot - rotation;
+      if (Math.abs(diff) > 0.003) {
+        rotation += diff * 0.1;
+        draw();
+        requestAnimationFrame(animate);
+      } else {
+        rotation = targetRot;
+        animating = false;
+        draw();
+      }
+    }
+
+    function getFiredIdx() {
+      const step = 2 * Math.PI / N;
+      for (let i = 0; i < N; i++) {
+        const ang = ((rotation + i * step - Math.PI / 2) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        if (Math.abs(ang - Math.PI) < step / 2) return i;
+      }
+      return 0;
+    }
+
+    // ── DOM refs ──
+    const card = document.getElementById('chamberCard');
+    const ccIcon = document.getElementById('ccIcon');
+    const ccName = document.getElementById('ccName');
+    const ccHook = document.getElementById('ccHook');
+    const ccEx   = document.getElementById('ccEx');
+    const fireBtn = document.getElementById('fireBtn');
+    const firedEl = document.getElementById('firedEmotion');
+    const muzzle  = document.getElementById('muzzleFlash');
+    const modeInfoBtn = document.getElementById('modeInfoBtn');
+    const modeActivityBtn = document.getElementById('modeActivityBtn');
+    const promptEl = document.querySelector('#slide-revolver .activity-prompt');
+    const revealBlock = document.getElementById('revealBlock');
+    const revealName = document.getElementById('revealName');
+    const revealHook = document.getElementById('revealHook');
+    const nextSpinBtn = document.getElementById('nextSpinBtn');
+    const infoEls = document.querySelectorAll('#slide-revolver .info-only');
+    const activityEls = document.querySelectorAll('#slide-revolver .activity-only');
+
+    function showCard(i) {
+      const em = emotions[i];
+      ccIcon.textContent = em.icon;
+      ccName.textContent = em.name;
+      ccName.style.color = em.color;
+      ccHook.textContent = em.hook;
+      ccEx.textContent = em.ex;
+      card.style.borderColor = em.color + '55';
+      card.classList.remove('hidden');
+    }
+    function hideCard() { card.classList.add('hidden'); }
+
+    function hitChamber(mx, my) {
+      for (let i = 0; i < N; i++) {
+        const { x, y } = chamberPos(i);
+        const dx = mx - x, dy = my - y;
+        if (dx * dx + dy * dy <= CHAM_R * CHAM_R) return i;
+      }
+      return -1;
+    }
+
+    // ── Mode switching ──
+    function setMode(m) {
+      mode = m;
+      modeInfoBtn.classList.toggle('active', m === 'info');
+      modeActivityBtn.classList.toggle('active', m === 'activity');
+      infoEls.forEach(el => el.classList.toggle('hidden', m !== 'info'));
+      activityEls.forEach(el => el.classList.toggle('hidden', m !== 'activity'));
+      // reset transient state
+      activeIdx = -1;
+      revealed = false;
+      hideCard();
+      firedEl.classList.add('hidden');
+      revealBlock.classList.add('hidden');
+      nextSpinBtn.classList.add('hidden');
+      promptEl.classList.add('hidden');
+      fireBtn.textContent = m === 'activity' ? '🎰 SPIN' : '🔫 FIRE';
+      fireBtn.classList.remove('hidden');
+      canvas.style.cursor = m === 'activity' ? 'pointer' : 'crosshair';
+      draw();
+    }
+    modeInfoBtn.addEventListener('click', () => setMode('info'));
+    modeActivityBtn.addEventListener('click', () => setMode('activity'));
+
+    // ── Hover (INFO mode only) ──
+    canvas.addEventListener('mousemove', function(e) {
+      if (mode !== 'info') return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (W / rect.width);
+      const my = (e.clientY - rect.top)  * (H / rect.height);
+      const idx = hitChamber(mx, my);
+      hoveredIdx = idx;
+      if (idx >= 0) { showCard(idx); canvas.style.cursor = 'pointer'; }
+      else { hideCard(); canvas.style.cursor = 'crosshair'; }
+      draw();
+    });
+    canvas.addEventListener('mouseleave', function() {
+      if (mode !== 'info') return;
+      hoveredIdx = -1; hideCard(); draw();
+    });
+
+    // ── Click behavior depends on mode ──
+    canvas.addEventListener('click', function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (W / rect.width);
+      const my = (e.clientY - rect.top)  * (H / rect.height);
+      const idx = hitChamber(mx, my);
+
+      if (mode === 'info') {
+        if (idx >= 0) {
+          const step = 2 * Math.PI / N;
+          const steps = Math.round((targetRot - (3 * Math.PI / 2 - idx * step)) / (2 * Math.PI));
+          targetRot = 3 * Math.PI / 2 - idx * step + steps * 2 * Math.PI;
+          targetRot -= 2 * Math.PI;
+          if (!animating) { animating = true; animate(); }
+          setTimeout(() => { activeIdx = idx; triggerFire(emotions[idx]); draw(); }, 800);
+        }
+      } else {
+        // Activity mode: clicking the landed chamber reveals it
+        if (activeIdx >= 0 && !revealed) doReveal();
+      }
+    });
+
+    // INFO-mode FIRE / ACTIVITY-mode SPIN
+    function spin(callback) {
+      const step = 2 * Math.PI / N;
+      const extraSpins = 2 + Math.floor(Math.random() * 3);
+      const chamberOff = Math.floor(Math.random() * N);
+      targetRot -= extraSpins * 2 * Math.PI + chamberOff * step;
+      if (!animating) { animating = true; animate(); }
+      setTimeout(() => { activeIdx = getFiredIdx(); draw(); if (callback) callback(); }, 1200);
+    }
+
+    function triggerFire(em) {
+      muzzle.classList.remove('hidden');
+      setTimeout(() => muzzle.classList.add('hidden'), 500);
+      firedEl.textContent = em.icon + '  ' + em.name;
+      firedEl.style.color = em.color;
+      firedEl.style.borderColor = em.color;
+      firedEl.style.background = em.color + '14';
+      firedEl.classList.remove('hidden');
+    }
+
+    function doReveal() {
+      if (activeIdx < 0) return;
+      const em = emotions[activeIdx];
+      revealed = true;
+      muzzle.classList.remove('hidden');
+      setTimeout(() => muzzle.classList.add('hidden'), 500);
+      revealName.textContent = em.icon + '  ' + em.name;
+      revealName.style.color = em.color;
+      revealHook.textContent = em.hook;
+      revealBlock.classList.remove('hidden');
+      // re-trigger pop animation
+      revealName.style.animation = 'none'; void revealName.offsetWidth;
+      revealName.style.animation = '';
+      nextSpinBtn.classList.remove('hidden');
+      promptEl.classList.add('hidden');
+    }
+
+    fireBtn.addEventListener('click', function() {
+      if (mode === 'info') {
+        firedEl.classList.add('hidden');
+        spin(() => triggerFire(emotions[activeIdx]));
+      } else {
+        // ACTIVITY: SPIN, hide name, show prompt
+        revealed = false;
+        revealBlock.classList.add('hidden');
+        nextSpinBtn.classList.add('hidden');
+        promptEl.classList.add('hidden');
+        spin(() => { promptEl.classList.remove('hidden'); });
+      }
+    });
+
+    nextSpinBtn.addEventListener('click', function() {
+      revealed = false;
+      revealBlock.classList.add('hidden');
+      nextSpinBtn.classList.add('hidden');
+      promptEl.classList.add('hidden');
+      activeIdx = -1;
+      draw();
+    });
+
+    // Space on revolver slide: SPIN if not landed/awaiting reveal, else REVEAL
+    revolverSpace = function() {
+      if (mode !== 'activity') { fireBtn.click(); return; }
+      if (activeIdx >= 0 && !revealed) doReveal();
+      else fireBtn.click();
+    };
+
+    setMode('info');
+    draw();
+  })();
+
+  /* ════════════════════════════════════════════════════
+     ACTIVITY B: WRONG-ANSWER BUZZER (Tie-Down slide)
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const trigger = document.getElementById('quizTriggerBtn');
+    const box = document.getElementById('quizBox');
+    if (!trigger || !box) return;
+    const options = box.querySelectorAll('.quiz-option');
+    const explain = document.getElementById('quizExplain');
+    const hint = document.getElementById('quizHint');
+    const reset = document.getElementById('quizReset');
+    let locked = false;
+
+    trigger.addEventListener('click', () => { box.classList.remove('hidden'); trigger.style.display = 'none'; });
+
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (locked) return;
+        const isWrongAnswer = opt.dataset.correct === 'false'; // the deliberately wrong tie-down
+        if (isWrongAnswer) {
+          // Correct guess — they found the bad one
+          locked = true;
+          opt.classList.add('flash-red');
+          setTimeout(() => opt.classList.add('collapse'), 500);
+          options.forEach(o => { if (o !== opt) o.classList.add('pulse-green'); });
+          explain.classList.remove('hidden');
+          hint.classList.add('hidden');
+          reset.classList.remove('hidden');
+        } else {
+          // They clicked a valid tie-down (wrong guess) — brief red + hint
+          opt.classList.add('flash-red-brief');
+          setTimeout(() => opt.classList.remove('flash-red-brief'), 600);
+          hint.classList.remove('hidden');
+        }
+      });
+    });
+
+    reset.addEventListener('click', () => {
+      locked = false;
+      options.forEach(o => o.classList.remove('flash-red','collapse','pulse-green','flash-red-brief'));
+      explain.classList.add('hidden');
+      hint.classList.add('hidden');
+      reset.classList.add('hidden');
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     ACTIVITY C: BUILD-THE-CLOSE COUNTDOWN (Alternative slide)
+     10s drain bar → strong version flips in. Space skips.
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const startBtn = document.getElementById('closeStartBtn');
+    const box = document.getElementById('closeBox');
+    if (!startBtn || !box) return;
+    const fill = document.getElementById('countdownFill');
+    const strongReveal = document.getElementById('strongReveal');
+    const resetBtn = document.getElementById('closeResetBtn');
+    let timer = null;
+    let running = false;
+
+    function begin() {
+      box.classList.remove('hidden');
+      startBtn.style.display = 'none';
+      strongReveal.classList.add('hidden');
+      // restart drain animation
+      fill.classList.remove('running');
+      void fill.offsetWidth;
+      fill.classList.add('running');
+      running = true;
+      clearTimeout(timer);
+      timer = setTimeout(reveal, 10000);
+    }
+    function reveal() {
+      running = false;
+      clearTimeout(timer);
+      strongReveal.classList.remove('hidden');
+      fill.classList.remove('running');
+      fill.style.transform = 'scaleX(0)';
+    }
+    startBtn.addEventListener('click', begin);
+    resetBtn.addEventListener('click', () => {
+      fill.style.transform = '';
+      begin();
+    });
+
+    // Space skip — only when this technique slide is the active slide
+    document.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.code === 'Space')) {
+        const active = slides[current];
+        if (active && active.contains(box) && running) {
+          e.preventDefault();
+          reveal();
+        }
+      }
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     ACTIVITY D: COLD OPEN RANKER
+     Click best→worst (1..5), then reveal reorders to correct.
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const list = document.getElementById('rankerList');
+    if (!list) return;
+    const cards = Array.from(list.querySelectorAll('.rank-card'));
+    const revealBtn = document.getElementById('revealRankBtn');
+    const resetBtn = document.getElementById('rankerResetBtn');
+    let nextRank = 1;
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        if (card.classList.contains('ranked')) return;
+        if (nextRank > 5) return;
+        card.classList.add('ranked');
+        card.querySelector('.rank-stamp').textContent = nextRank;
+        card.dataset.userRank = nextRank;
+        nextRank++;
+        if (nextRank > 5) revealBtn.classList.remove('hidden');
+      });
+    });
+
+    revealBtn.addEventListener('click', () => {
+      revealBtn.classList.add('hidden');
+      // Sort by data-correct (1 = best). Reorder via flex order.
+      const sorted = cards.slice().sort((a, b) => (+a.dataset.correct) - (+b.dataset.correct));
+      sorted.forEach((card, i) => {
+        card.style.order = i;
+        card.classList.add('revealed', card.dataset.cls);
+        card.querySelector('.rank-stamp').textContent = i + 1;
+        card.querySelector('.rank-verdict').textContent = card.dataset.verdict;
+      });
+      list.style.display = 'flex';
+      resetBtn.classList.remove('hidden');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      nextRank = 1;
+      cards.forEach(card => {
+        card.classList.remove('ranked','revealed','good','bad');
+        card.style.order = '';
+        card.querySelector('.rank-stamp').textContent = '–';
+        card.querySelector('.rank-verdict').textContent = '';
+        delete card.dataset.userRank;
+      });
+      resetBtn.classList.add('hidden');
+      revealBtn.classList.add('hidden');
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     ACTIVITY E: LIVE REP — Role-Play Card Draw
+     8 scenarios shuffled, no repeats until all shown.
+     Draw button flips card; Draw Again reshuffles next.
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const cardInner  = document.getElementById('liverepCardInner');
+    const front      = document.getElementById('liverepFront');
+    const drawBtn    = document.getElementById('liverepDrawBtn');
+    const goBtn      = document.getElementById('liverepGoBtn');
+    const againBtn   = document.getElementById('liverepAgainBtn');
+    const countBadge = document.getElementById('liverepCountBadge');
+    if (!cardInner) return;
+
+    const scenarios = [
+      { emoji: '⌚', product: 'A Rolex', color: '#ffd700',
+        prospect: '"I already have a perfectly good watch."',
+        goal: 'Sell the status and identity — not the time-keeping.' },
+      { emoji: '📈', product: 'The Trading Simulator', color: '#6c63ff',
+        prospect: '"My interns can just shadow me on the desk."',
+        goal: 'Sell time savings, scalability, and intern readiness.' },
+      { emoji: '🛡️', product: 'Life Insurance', color: '#38bdf8',
+        prospect: '"I\'m young — I don\'t need that yet."',
+        goal: 'Sell family security and the cost of waiting.' },
+      { emoji: '🚗', product: 'A Minivan', color: '#fb923c',
+        prospect: '"I don\'t want to look like a soccer parent."',
+        goal: 'Sell family, safety, and practicality — hit the emotion they\'re avoiding.' },
+      { emoji: '☕', product: 'A $6 Coffee', color: '#c084fc',
+        prospect: '"I can make coffee at home for 20 cents."',
+        goal: 'Sell the ritual, the status, and the daily experience.' },
+      { emoji: '🏋️', product: 'A Gym Membership', color: '#00d4aa',
+        prospect: '"I\'ve tried gyms before and never stick with it."',
+        goal: 'Overcome self-doubt — sell community, accountability, and identity.' },
+      { emoji: '💻', product: 'A $3,000 Laptop', color: '#a78bfa',
+        prospect: '"Mine still works fine."',
+        goal: 'Sell performance, professional identity, and competitive edge.' },
+      { emoji: '🏖️', product: 'A Vacation Package', color: '#ff6b6b',
+        prospect: '"I can\'t afford to take time off right now."',
+        goal: 'Sell the cost of NOT going — burnout, missed memories, perspective.' },
+    ];
+
+    // Fisher-Yates shuffle
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    let deck = shuffle(scenarios);
+    let idx = 0;
+    let flipped = false;
+
+    function updateBadge() {
+      countBadge.textContent = `Scenario ${idx + 1} of ${deck.length}`;
+    }
+
+    function showScenario(s) {
+      document.getElementById('scenarioEmoji').textContent = s.emoji;
+      document.getElementById('scenarioProduct').textContent = s.product;
+      document.getElementById('scenarioProspect').textContent = s.prospect;
+      document.getElementById('scenarioGoal').textContent = s.goal;
+      document.getElementById('scenarioBorderBar').style.background = s.color;
+      document.getElementById('liverepBack').style.borderColor = s.color + '55';
+    }
+
+    function draw() {
+      if (idx >= deck.length) { deck = shuffle(scenarios); idx = 0; }
+      showScenario(deck[idx]);
+      updateBadge();
+      // Flip card
+      flipped = true;
+      cardInner.classList.add('flipped');
+      // Swap controls
+      drawBtn.classList.add('hidden');
+      goBtn.classList.remove('hidden');
+      againBtn.classList.remove('hidden');
+      countBadge.style.opacity = '1';
+    }
+
+    function drawAgain() {
+      idx++;
+      if (idx >= deck.length) { deck = shuffle(scenarios); idx = 0; }
+      showScenario(deck[idx]);
+      updateBadge();
+      // Brief unflip + reflip for visual feedback
+      cardInner.classList.remove('flipped');
+      setTimeout(() => { cardInner.classList.add('flipped'); }, 50);
+    }
+
+    function reset() {
+      flipped = false;
+      cardInner.classList.remove('flipped');
+      drawBtn.classList.remove('hidden');
+      goBtn.classList.add('hidden');
+      againBtn.classList.add('hidden');
+      countBadge.style.opacity = '0';
+    }
+
+    front.addEventListener('click', draw);
+    drawBtn.addEventListener('click', draw);
+    againBtn.addEventListener('click', drawAgain);
+    goBtn.addEventListener('click', () => {
+      // Visual "GO" pulse then reset for next round
+      goBtn.textContent = '✓ Go!';
+      goBtn.style.transform = 'scale(1.08)';
+      setTimeout(() => {
+        goBtn.textContent = '✓ Start Conversation';
+        goBtn.style.transform = '';
+      }, 600);
+    });
+
+    // Reset slide state when navigating away
+    const slideEl = document.getElementById('slide-liverep');
+    if (slideEl) {
+      const observer = new MutationObserver(() => {
+        if (!slideEl.classList.contains('active')) reset();
+      });
+      observer.observe(slideEl, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    // Initialise badge opacity hidden
+    countBadge.style.opacity = '0';
+  })();
+
+  /* ════════════════════════════════════════════════════
+     BOND KILLERS activity
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const btn = document.getElementById('bondKillBtn');
+    const box = document.getElementById('bondKillBox');
+    const reveal = document.getElementById('bondKillReveal');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      box.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('.bond-kill-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        pill.classList.add('clicked');
+        reveal.textContent = pill.dataset.explain;
+        reveal.classList.add('visible');
+      });
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     OBJECTION OR SMOKESCREEN activity
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const btn = document.getElementById('objActivityBtn');
+    const box = document.getElementById('objActivityBox');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      box.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('.obj-card').forEach(card => {
+      const voteBtns = card.querySelectorAll('.obj-vote');
+      voteBtns.forEach(vBtn => {
+        vBtn.addEventListener('click', () => {
+          if (card.querySelector('.obj-reveal')) return;
+          const isCorrect = vBtn.dataset.val === card.dataset.real;
+          card.querySelector('.obj-vote-btns').insertAdjacentHTML('afterend',
+            `<div class="obj-reveal ${isCorrect ? 'obj-correct' : 'obj-wrong'}">${isCorrect ? '✓ ' : '✗ '}${card.dataset.explain}</div>`
+          );
+          voteBtns.forEach(b => b.disabled = true);
+        });
+      });
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     BUILD IT LIVE — Inverted Tie-Down
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const openBtn = document.getElementById('buildLiveBtn');
+    const box = document.getElementById('buildBox');
+    const revealBtn = document.getElementById('buildRevealBtn');
+    const reveal = document.getElementById('buildReveal');
+    if (!openBtn) return;
+
+    openBtn.addEventListener('click', () => { box.classList.toggle('hidden'); });
+    revealBtn.addEventListener('click', () => {
+      reveal.classList.remove('hidden');
+      revealBtn.classList.add('hidden');
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     SPOT IT — Internal Tie-Down
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const openBtn = document.getElementById('spotBtn');
+    const box = document.getElementById('spotBox');
+    const explainEl = document.getElementById('spotExplain');
+    const resetBtn = document.getElementById('spotReset');
+    if (!openBtn) return;
+
+    openBtn.addEventListener('click', () => { box.classList.toggle('hidden'); });
+
+    document.querySelectorAll('.spot-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (box.querySelector('.correct')) return;
+        const correct = opt.dataset.correct === 'true';
+        opt.classList.add(correct ? 'correct' : 'wrong');
+        explainEl.textContent = opt.dataset.explain;
+        explainEl.classList.remove('hidden');
+        if (!correct) {
+          document.querySelectorAll('.spot-option').forEach(o => {
+            if (o.dataset.correct === 'true') o.classList.add('correct');
+          });
+        }
+        resetBtn.classList.remove('hidden');
+      });
+    });
+
+    resetBtn.addEventListener('click', () => {
+      document.querySelectorAll('.spot-option').forEach(o => o.classList.remove('correct','wrong'));
+      explainEl.classList.add('hidden');
+      explainEl.textContent = '';
+      resetBtn.classList.add('hidden');
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     HOT POTATO — Porcupine
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const openBtn = document.getElementById('potatoBtn');
+    const box = document.getElementById('potatoBox');
+    const qText = document.getElementById('potatoQText');
+    const reveal = document.getElementById('potatoReveal');
+    const answer = document.getElementById('potatoAnswer');
+    const revealBtn = document.getElementById('potatoRevealBtn');
+    const nextBtn = document.getElementById('potatoNextBtn');
+    const countEl = document.getElementById('potatoCount');
+    if (!openBtn) return;
+
+    const questions = [
+      { q: '"Could I get this implemented by Q3?"',
+        a: '"Is that when you need it by?" — Wait. Let them confirm or hedge their own deadline.' },
+      { q: '"Do you offer a money-back guarantee?"',
+        a: '"Is that something that\'s important to you?" — Makes them articulate their real concern.' },
+      { q: '"Can you do better on the price?"',
+        a: '"What number were you thinking?" — They anchor first, not you.' },
+      { q: '"Does this integrate with our existing system?"',
+        a: '"What system are you currently using?" — Gets you the info you need to answer precisely.' },
+      { q: '"Do most companies your size use this?"',
+        a: '"How many people does your firm have?" — Qualify them while bouncing it back.' },
+    ];
+
+    let idx = 0;
+
+    function show() {
+      const item = questions[idx];
+      qText.textContent = item.q;
+      answer.textContent = item.a;
+      reveal.classList.add('hidden');
+      revealBtn.classList.remove('hidden');
+      countEl.textContent = `${idx + 1} / ${questions.length}`;
+    }
+
+    openBtn.addEventListener('click', () => {
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) show();
+    });
+
+    revealBtn.addEventListener('click', () => {
+      reveal.classList.remove('hidden');
+      revealBtn.classList.add('hidden');
+    });
+
+    nextBtn.addEventListener('click', () => {
+      idx = (idx + 1) % questions.length;
+      show();
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     FUTURE PACE — Involvement Question
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const openBtn = document.getElementById('paceBtn');
+    const box = document.getElementById('paceBox');
+    const revealBtn = document.getElementById('paceRevealBtn');
+    const reveals = document.getElementById('paceReveals');
+    if (!openBtn) return;
+
+    openBtn.addEventListener('click', () => { box.classList.toggle('hidden'); });
+    revealBtn.addEventListener('click', () => {
+      reveals.classList.remove('hidden');
+      revealBtn.classList.add('hidden');
+    });
+  })();
+
+  /* ════════════════════════════════════════════════════
+     SCENARIO SLIDE TABS
+  ════════════════════════════════════════════════════ */
+  document.querySelectorAll('.slide-scenario').forEach(slide => {
+    slide.querySelectorAll('.sc-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        slide.querySelectorAll('.sc-tab').forEach(t => t.classList.remove('active'));
+        slide.querySelectorAll('.sc-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        slide.querySelector(`.sc-panel[data-panel="${tab.dataset.panel}"]`).classList.add('active');
+      });
+    });
+  });
+
+  /* ════════════════════════════════════════════════════
+     COACHING BENCH — 8 scoring slots per bench row
+  ════════════════════════════════════════════════════ */
+  (function() {
+    const labels = ['A','B','C','D','E','F','G','H'];
+    document.querySelectorAll('.sc-bench-row').forEach(row => {
+      labels.forEach(label => {
+        const wrap = document.createElement('div');
+        wrap.className = 'sc-bench-score';
+        wrap.innerHTML = `
+          <div class="sc-score-btns">
+            <button class="sc-score-btn" title="Intern ${label} up">👍</button>
+            <button class="sc-score-btn" title="Intern ${label} down">👎</button>
+          </div>
+          <span>${label}</span>
+        `;
+        const [up, down] = wrap.querySelectorAll('.sc-score-btn');
+        up.addEventListener('click', () => { up.classList.toggle('scored-up'); down.classList.remove('scored-down'); });
+        down.addEventListener('click', () => { down.classList.toggle('scored-down'); up.classList.remove('scored-up'); });
+        row.appendChild(wrap);
+      });
+    });
+  })();
+
+</script>
+</body>
+</html>
