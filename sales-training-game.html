@@ -7,7 +7,7 @@
 <style>
   :root { --gold:#f0a500; --gold-dark:#c47f00; --bg:#0a0a0f; --bg2:#12121a; --bg3:#1a1a26; --border:#2a2a3a; --text:#f0f0f0; --text-dim:#888; --green:#22c55e; --red:#ef4444; --blue:#3b82f6; --purple:#a855f7; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; height:1080px; width:1920px; overflow:hidden; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; height:100vh; width:100vw; overflow:hidden; }
   .screen { display:none; width:100vw; height:100vh; overflow:hidden; }
   .screen.active { display:flex; flex-direction:column; }
 
@@ -661,18 +661,6 @@ function init(){
 }
 window.onload=init;
 
-function scaleToFit() {
-  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-  document.body.style.transform = `scale(${s})`;
-  document.body.style.transformOrigin = 'top left';
-  document.body.style.width = '1920px';
-  document.body.style.height = '1080px';
-  document.body.style.position = 'absolute';
-  document.body.style.top = `${(window.innerHeight - 1080 * s) / 2}px`;
-  document.body.style.left = `${(window.innerWidth - 1920 * s) / 2}px`;
-}
-scaleToFit();
-window.addEventListener('resize', scaleToFit);
 </script>
 </body>
 </html>
