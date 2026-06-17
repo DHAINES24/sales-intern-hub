@@ -79,14 +79,44 @@
   .diff-3 { background:var(--gold); }
   .diff-4 { background:#f97316; }
   .diff-5 { background:var(--red); }
-  .card-body { padding:18px 20px; flex:1; display:flex; flex-direction:column; gap:5px; }
-  .card-setting { font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; }
-  .card-name { font-size:1.2rem; font-weight:800; }
-  .card-tagline { font-size:0.82rem; color:#aaa; line-height:1.4; }
-  .card-goal { font-size:0.78rem; color:var(--gold); margin-top:4px; }
-  .diff-stars { color:var(--gold); font-size:0.8rem; letter-spacing:2px; }
-  .card-footer { padding:12px 20px; background:var(--gold); text-align:center; font-weight:700; font-size:0.88rem; color:var(--bg); transition:background 0.2s; }
+  .card-body { padding:18px 20px; flex:1; display:flex; flex-direction:column; gap:7px; }
+  .card-person { font-size:0.7rem; color:var(--gold); text-transform:uppercase; letter-spacing:2px; font-weight:700; }
+  .card-name { font-size:1.18rem; font-weight:800; line-height:1.3; }
+  .card-setting { font-size:0.82rem; color:#aaa; line-height:1.4; }
+  .diff-stars { color:var(--gold); font-size:0.85rem; letter-spacing:2px; margin-top:auto; padding-top:6px; }
+  .card-footer { padding:13px 20px; background:var(--gold); text-align:center; font-weight:700; font-size:0.9rem; color:var(--bg); transition:background 0.2s; }
   .scenario-card:hover .card-footer { background:var(--gold-dark); }
+
+  /* FLIP-CARD PLAY SCREEN */
+  #play-main { flex:1; overflow-y:auto; padding:36px 48px; }
+  #active-player-tag { margin-left:auto; }
+  .active-player-pill { background:var(--bg3); border:1px solid var(--gold); color:var(--gold); padding:6px 14px; border-radius:20px; font-size:0.82rem; font-weight:600; }
+  .play-wrap { max-width:1000px; margin:0 auto; }
+  .play-meta { text-align:center; margin-bottom:32px; }
+  .play-person { font-size:0.75rem; color:var(--gold); letter-spacing:2px; text-transform:uppercase; font-weight:700; }
+  .play-name { font-size:2rem; font-weight:900; margin:8px 0 6px; }
+  .play-setting { color:var(--text-dim); font-size:0.9rem; letter-spacing:1px; }
+  .play-hint { color:var(--text-dim); font-size:0.9rem; line-height:1.6; max-width:620px; margin:16px auto 0; }
+  .flip-row { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .flip-card { perspective:1400px; height:340px; cursor:pointer; }
+  .flip-inner { position:relative; width:100%; height:100%; transition:transform 0.6s; transform-style:preserve-3d; }
+  .flip-card.flipped .flip-inner { transform:rotateY(180deg); }
+  .flip-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:16px; border:1px solid var(--border); display:flex; flex-direction:column; padding:28px; }
+  .flip-front { align-items:center; justify-content:center; gap:14px; }
+  .sales-front { background:linear-gradient(135deg,#1a2540,#0f1830); border-color:var(--blue); }
+  .prospect-front { background:linear-gradient(135deg,#2a1530,#1a0f26); border-color:var(--purple); }
+  .flip-role { font-size:1.6rem; font-weight:900; letter-spacing:3px; }
+  .sales-front .flip-role { color:var(--blue); }
+  .prospect-front .flip-role { color:var(--purple); }
+  .flip-tap { font-size:0.85rem; color:var(--text-dim); letter-spacing:1px; }
+  .flip-back { transform:rotateY(180deg); background:var(--bg2); overflow-y:auto; }
+  .flip-role-sm { font-size:0.7rem; letter-spacing:2px; font-weight:700; margin-bottom:14px; }
+  .sales-role { color:var(--blue); }
+  .prospect-role { color:var(--purple); }
+  .flip-text { font-size:0.98rem; line-height:1.7; color:#ddd; flex:1; }
+  .flip-hide { font-size:0.75rem; color:var(--text-dim); text-align:center; margin-top:14px; letter-spacing:1px; }
+  .play-actions { text-align:center; margin-top:32px; }
+  @media (max-width:760px){ .flip-row{grid-template-columns:1fr;} #scenario-grid{grid-template-columns:1fr;} }
 
   /* PLAY */
   #scenario-play { display:none; width:100vw; height:100vh; overflow:hidden; }
@@ -180,14 +210,13 @@
     <div class="nav-tab" onclick="showScreen('teach')">📚 Teach</div>
     <div class="nav-tab" onclick="showScreen('arena')">🎯 Arena</div>
   </div>
-  <button id="scoreboard-toggle" onclick="toggleScoreboard()">🏆 Scoreboard</button>
 </div>
 
 <div id="home-screen" class="screen active">
   <div class="home-content">
     <div style="font-size:0.85rem;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">TJYOPTIONS INTERN PROGRAM</div>
     <h1>SALES<br>ARENA</h1>
-    <p>Learn the game. Run the scenarios. Earn your rank.</p>
+    <p>Learn the game. Run the scenarios. Two roles, two cards.</p>
     <div class="home-btns">
       <button class="btn-primary" onclick="openSetup()">🚀 Start Session</button>
       <button class="btn-secondary" onclick="showScreen('arena')">🎯 Jump to Scenarios</button>
@@ -220,31 +249,11 @@
   <div id="play-header">
     <button id="play-back" onclick="closeScenario()">← Back</button>
     <span id="play-title"></span>
-    <div class="stage-tabs" id="stage-tabs">
-      <div class="stage-tab active" onclick="goStage(0)">BRIEF</div>
-      <div class="stage-tab locked" onclick="goStage(1)">OPEN</div>
-      <div class="stage-tab locked" onclick="goStage(2)">BOND</div>
-      <div class="stage-tab locked" onclick="goStage(3)">OBJECTION</div>
-      <div class="stage-tab locked" onclick="goStage(4)">CLOSE</div>
-    </div>
+    <div id="active-player-tag"></div>
   </div>
   <div id="play-body">
     <div id="play-main"></div>
-    <div id="play-sidebar">
-      <h4>Coaching Bench</h4>
-      <div id="bench-list"></div>
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
-        <div style="font-size:0.75rem;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Active Player</div>
-        <div id="active-player-display" style="font-size:1.1rem;font-weight:700;color:var(--gold);">—</div>
-      </div>
-    </div>
   </div>
-</div>
-
-<div id="scoreboard-panel">
-  <h3>🏆 LEADERBOARD</h3>
-  <div id="sb-rows"></div>
-  <button id="sb-reset" onclick="resetScores()">Reset Session</button>
 </div>
 
 <div id="setup-modal">
@@ -342,171 +351,48 @@ const CHAPTERS = [
 ];
 
 const SCENARIOS = [
-  { id:'skeptic', name:'The Skeptic', setting:'Financial firm lobby', tagline:'Cold open. He didn\'t come for you.', goal:'Get a 20-minute follow-up call', difficulty:5, color:'#ef4444',
-    situation:'Robert Singh, 42, portfolio manager waiting in your lobby for a colleague. Loyal to his advisor for 5 years. He didn\'t come for you — glued to his phone, 60 seconds before his contact comes down.',
-    context:['Loyal to his current advisor for 5+ years','Runs a 12-person trading desk evaluating new data tools','Analytical, skeptical of salespeople, guarded'],
-    opening:'"I\'ll be honest — I\'m just here waiting for someone. I\'m not really looking for anything."',
-    objections:['"I already have an advisor I trust."','"I don\'t see why I\'d switch."','"I\'m happy with what I have."'],
-    stages:[
-      {label:'OPEN',title:'Cold Open',content:`<p><strong>Mission:</strong> Get him talking in 60 seconds. Don't pitch. Open with curiosity.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> Don't introduce what you sell. Try "What brings you in?" or make a relevant observation.</div><div class="tip"><strong>Win:</strong> He puts his phone down and asks you something back.</div></div>`,cta:'He engages → Bond'},
-      {label:'BOND',title:'Build the Connection',content:`<p>He runs a 12-person trading desk. Analytical, skeptical.</p><p><strong>Mission:</strong> Mirror his energy. Ask about his world — not your product.</p><div class="tip-list"><div class="tip"><strong>Use:</strong> "12-person team" — ask about structure, not the decision.</div><div class="tip"><strong>Don't:</strong> Mention your product yet. He shuts down.</div></div>`,cta:'He opens up → Objection hits'},
-      {label:'OBJECTION',title:'The Loyalty Objection',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"I already have an advisor I trust. We've worked together five years. I don't see why I'd change."</div></div><p>You're fighting relationship, not price.</p><div class="tip-list"><div class="tip"><strong>Cushion:</strong> "Five years is a real relationship — I respect that."</div><div class="tip"><strong>Clarify:</strong> "Is it that you're fully satisfied, or more that switching feels disruptive?"</div><div class="tip"><strong>Reframe:</strong> You're not replacing — you're offering a second perspective.</div></div>`,cta:'Handled → Close'},
-      {label:'CLOSE',title:'The Soft Close',content:`<p>Don't ask for the sale. Ask for 20 minutes.</p><div class="tip-list"><div class="tip"><strong>Tie-down:</strong> "You mentioned evaluating tools — would it hurt to have a second data point before you decide?"</div><div class="tip"><strong>The ask:</strong> "I'd just like 20 minutes — you'd know within the first 5 if it's relevant."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>What did the rep do well in bond? At what moment would Robert have shut down? What one question would have opened him up faster?</p></div>`,cta:null}
-    ]},
-  { id:'browser', name:'The Browser', setting:'Luxury watch boutique', tagline:'The objection isn\'t price — it\'s self-permission.', goal:'Close the sale on the Submariner', difficulty:3, color:'#a855f7',
-    situation:'Marcus Chen, 35, software engineer who just got a big raise. Been circling the Rolex Submariner display for 8 minutes. Done months of research — knows the specs cold. First "real" watch purchase.',
-    context:['Recent big raise — first milestone purchase','Has researched this watch for months','Knows more about it than most staff'],
-    opening:'"I\'m just looking. I\'m not sure I\'m ready to pull the trigger on something like this."',
-    objections:['"It\'s a lot of money for just a watch."','"I feel guilty spending this on myself."','"I should probably wait."'],
-    stages:[
-      {label:'OPEN',title:'Approach Without Pressure',content:`<p>Approach too hard and he leaves. Don't approach and he leaves. Find the third option.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> Stand near him, make an observation — not a question. "That one's been getting a lot of attention this week."</div><div class="tip"><strong>Win:</strong> He responds and stays.</div></div>`,cta:'He engages → Bond'},
-      {label:'BOND',title:'Let Him Lead',content:`<p><strong>Mission:</strong> Let him teach you. Ask what drew him to this model. Make him the expert.</p><div class="tip-list"><div class="tip"><strong>Magic question:</strong> "What is it about the Submariner specifically that keeps pulling you back?"</div><div class="tip"><strong>Don't:</strong> Tell him things he already knows.</div></div>`,cta:'Connection made → Objection drops'},
-      {label:'OBJECTION',title:'The Permission Block',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"I feel guilty spending this on myself. It's a lot of money for... a watch."</div></div><p>Not a price objection. He has the money. The problem is self-permission.</p><div class="tip-list"><div class="tip"><strong>Don't:</strong> Justify the price or explain resale value. Wrong sale.</div><div class="tip"><strong>Do:</strong> "You've been researching for months — this isn't an impulse. You made this decision over months."</div><div class="tip"><strong>Real close:</strong> "Some people buy a watch. You're marking something."</div></div>`,cta:'Guilt addressed → Close'},
-      {label:'CLOSE',title:'The Permission Close',content:`<p>He wants it. He just needs permission to want it.</p><div class="tip-list"><div class="tip"><strong>Involvement:</strong> "Which wrist do you wear a watch on?" — Get it on his wrist.</div><div class="tip"><strong>Future pace:</strong> "Where's the first place you'd wear this?"</div><div class="tip"><strong>The close:</strong> "You've done the research, you know this is the one, and you've earned it. Let's get it sized."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>What was the real objection? How is it different from a price objection? What would have been the wrong move when he said he felt guilty?</p></div>`,cta:null}
-    ]},
-  { id:'researcher', name:'The Researcher', setting:'Demo call — they out-prepared you', tagline:'They know more than you think. Win with questions.', goal:'Land a 30-day pilot', difficulty:4, color:'#3b82f6',
-    situation:'Sarah Liu, 29, risk analyst at a prop firm. Sent a pre-call agenda with specific questions. Team runs Bloomberg. More prepared than 90% of your prospects.',
-    context:['Sent a pre-call agenda with specific questions','Team runs Bloomberg — entrenched incumbent','Analytical, detail-oriented — sees through fluff instantly'],
-    opening:'"I looked at your website. I have some specific questions. Can we start there instead of the demo?"',
-    objections:['"My team already uses Bloomberg."','"Why would we add another tool?"','"Switching costs are real."'],
-    stages:[
-      {label:'OPEN',title:'The Prepared Prospect',content:`<p><strong>Mission:</strong> Match her prep with better questions, not a better pitch.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "I saw your agenda — exactly the right questions. Before the demo, can I ask what's driving the evaluation?"</div></div>`,cta:'She engages → Bond'},
-      {label:'BOND',title:'Become a Peer',content:`<p>Bond here is intellectual respect, not warmth. She'll see through fluff instantly.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "Walk me through how your team handles options flow data now — what's working, what's annoying you."</div><div class="tip"><strong>Listen for:</strong> Latency, data gaps, workflow friction. These become your close.</div></div>`,cta:'She trusts you → Objection drops'},
-      {label:'OBJECTION',title:'The Incumbent Problem',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"My team already uses Bloomberg. We have licenses, training, workflows built around it. Why would we add another tool?"</div></div><div class="tip-list"><div class="tip"><strong>Don't say:</strong> "Bloomberg can't do what we do." She chose Bloomberg.</div><div class="tip"><strong>Do say:</strong> "Most of our best users are Bloomberg shops — they use us for the gaps Bloomberg isn't built for."</div><div class="tip"><strong>Tie back:</strong> She mentioned a friction point earlier. Use it now: "You mentioned [X]. That's exactly what we were built for."</div></div>`,cta:'Handled → Close'},
-      {label:'CLOSE',title:'The Pilot Close',content:`<p>She's not replacing Bloomberg. Don't ask her to.</p><div class="tip-list"><div class="tip"><strong>The ask:</strong> "30 days alongside what you have — you'll know in week 2 if there's a real use case."</div><div class="tip"><strong>Risk reversal:</strong> "If the team doesn't use it in 30 days, we walk away. No contract."</div><div class="tip"><strong>Tie-down:</strong> "That's low risk for you, right?"</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>How is the Researcher different from a normal prospect? What was key to avoid when Bloomberg came up? What from bond could you have used in the close?</p></div>`,cta:null}
-    ]},
-  { id:'spouse', name:'The Spouse Blocker', setting:'Car dealership — he\'s sold, she\'s not', tagline:'Sell to two people at once.', goal:'Get both of them to yes', difficulty:4, color:'#f97316',
-    situation:'Tom Lee, 44, has been on the lot twice this week and is ready to sign. His wife Linda is here for the first time. Arms crossed. If you talk only to Tom, Linda digs in harder.',
-    context:['Tom is fully sold — just needs to sign','Linda wasn\'t part of the process until today','If Linda isn\'t won, the deal dies'],
-    opening:'Tom: "We\'re ready to move forward." Linda: "I\'m not sure this is really the right fit for us."',
-    objections:['"This isn\'t the car I pictured for us." — Linda','"I need to think about it more." — Linda','"Tom picked this, not me."'],
-    stages:[
-      {label:'OPEN',title:'Reading the Room',content:`<p>Your first move determines everything.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> Greet equally. First question goes to Linda: "Have you had a chance to see the car yet, or is this your first look?"</div><div class="tip"><strong>Why:</strong> She feels excluded. Including her first says her opinion matters.</div></div>`,cta:'Linda engages → Bond'},
-      {label:'BOND',title:'Win Linda Without Losing Tom',content:`<p><strong>Mission:</strong> Find out what Linda actually wants — not what Tom said she'd like.</p><div class="tip-list"><div class="tip"><strong>Key question:</strong> "What's most important to you in a car?" — What matters TO HER.</div><div class="tip"><strong>Listen for:</strong> Safety? Space? Reliability? That's your close.</div></div>`,cta:'Linda opens up → Objection drops'},
-      {label:'OBJECTION',title:'Linda\'s Objection',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"This isn't the car I pictured for us. I thought we'd get something more... practical. More family."</div></div><div class="tip-list"><div class="tip"><strong>Don't defend the car to Linda.</strong> That says Tom's choice matters more.</div><div class="tip"><strong>Explore:</strong> "When you say family — space? Safety? Weekend trips?"</div><div class="tip"><strong>Key:</strong> Tom stays quiet. You handle Linda. If Tom interrupts, it's over.</div></div>`,cta:'Linda feels heard → Close'},
-      {label:'CLOSE',title:'Close Both at Once',content:`<p>The close has to work for both. Linda needs to feel like she made the decision.</p><div class="tip-list"><div class="tip"><strong>Summary close:</strong> "Linda — you said safety and space. Tom — you've been here twice. Everything Linda asked about, this car has. What's making you hesitate?"</div><div class="tip"><strong>If Linda's still unsold:</strong> Ask what one thing needs to change. Fix that one thing only.</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>At what point did you include Linda? What was the real objection under "this isn't what I pictured"? What happens if you kept talking to Tom when Linda objected?</p></div>`,cta:null}
-    ]},
-  { id:'pricehammer', name:'The Price Hammer', setting:'Insurance office — referred walk-in', tagline:'Classic value vs. price. Every rep faces this.', goal:'Close without discounting', difficulty:2, color:'#22c55e',
-    situation:'David Johnson, 38, referred by a current client. Direct, numbers-driven, busy. Found a competing policy online for half the price and came in to see if you can justify the difference.',
-    context:['Referred by Mike — existing client','Found the same thing online for half the price','Direct and numbers-driven — limited patience'],
-    opening:'"Mike said you guys are good, but I found basically the same thing online for way less. Why would I pay more here?"',
-    objections:['"I found it for half the price online."','"I don\'t see what the difference is."','"Price is price."'],
-    stages:[
-      {label:'OPEN',title:'The Referred Walk-In',content:`<p>He's warm — use the referral. Open with it.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "Mike mentioned you were looking — how do you know Mike?" The connection builds instant credibility.</div><div class="tip"><strong>Don't skip discovery:</strong> Warm doesn't mean you know what he needs.</div></div>`,cta:'Good start → Bond'},
-      {label:'BOND',title:'Qualify Fast',content:`<p>David is direct and busy. 3 sharp qualifying questions, then show you understand.</p><div class="tip-list"><div class="tip"><strong>Questions:</strong> What are you paying now? What's your main gap? What made you finally look?</div><div class="tip"><strong>Bond move:</strong> Repeat his answers back. "So you're paying $X, the gap is Y — let me show you how we solve that."</div></div>`,cta:'Qualified → Objection hits'},
-      {label:'OBJECTION',title:'The Price Hammer',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"I found basically the same thing online for half the price. Why would I pay more?"</div></div><div class="tip-list"><div class="tip"><strong>Cushion:</strong> "Half price is hard to ignore — I'd ask the same question."</div><div class="tip"><strong>Clarify:</strong> "Did that policy cover [the specific gap he mentioned]?" It almost never does.</div><div class="tip"><strong>Reframe:</strong> "The cheapest insurance is the one that pays when you need it."</div></div>`,cta:'Value established → Close'},
-      {label:'CLOSE',title:'The Value Close',content:`<p>Close on the gap, not the price.</p><div class="tip-list"><div class="tip"><strong>Tie-down:</strong> "You came in because of a gap — that gap exists in the online policy too. What's that gap worth to you per month?"</div><div class="tip"><strong>Ben Franklin:</strong> Write out what he gets vs. online. Side by side.</div><div class="tip"><strong>Don't discount.</strong> You already justified the price — discounting says your first price was fake.</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>What was the key move when he mentioned the online price? What from discovery did you tie the close back to? What happens if you just defend your price?</p></div>`,cta:null}
-    ]},
-  { id:'ghost', name:'The Ghost', setting:'Follow-up call — was hot, now cold', tagline:'The deal felt done and disappeared.', goal:'Re-open the deal or get intro to the decision-maker', difficulty:5, color:'#888',
-    situation:'Alex Park, 31. Two weeks ago: "Send the contract, we\'re moving forward." Then silence. Two follow-up calls, no answer. He just picked up. Something changed.',
-    context:['Said "send the contract" two weeks ago','Has not responded to 2 follow-up calls','His energy is noticeably shorter on the phone'],
-    opening:'"Oh hey... yeah, sorry I\'ve been meaning to reach out. Things just got complicated on our end."',
-    objections:['"My boss killed the budget."','"It\'s not a good time right now."','"I can\'t push back on this one."'],
-    stages:[
-      {label:'OPEN',title:'The Cold Call Back',content:`<p>He picked up. Don't be aggressive. Get information.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "Alex — glad I caught you. Last we talked you were ready to move. I want to make sure nothing fell through on my end — what happened?"</div><div class="tip"><strong>Key:</strong> Short. Direct. Not accusatory. Ball is in his court.</div></div>`,cta:'He engages → Bond'},
-      {label:'BOND',title:'Re-establish Without Pressure',content:`<p>Something changed. Don't push — find out what.</p><div class="tip-list"><div class="tip"><strong>Reference something real:</strong> "Last time you mentioned your Q2 deadline — are you still on track?"</div><div class="tip"><strong>Listen:</strong> He'll tell you what changed if you make it easy.</div></div>`,cta:'He opens up → Objection drops'},
-      {label:'OBJECTION',title:'The Vanished Deal',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"Look, I'm sorry I went dark. My boss reviewed the budget and said no. It's not something I can push back on right now."</div></div><div class="tip-list"><div class="tip"><strong>Don't close Alex.</strong> Alex can't close — his boss can.</div><div class="tip"><strong>Validate:</strong> "I appreciate you being straight with me — that's the right call on your end."</div><div class="tip"><strong>Clarify:</strong> "When your boss said budget — was it timing, or was it that the value case wasn't clear?"</div><div class="tip"><strong>Ask for intro:</strong> "Is there a version where I present directly to your boss?"</div></div>`,cta:'Path found → Close'},
-      {label:'CLOSE',title:'The Re-Open',content:`<p>You're closing Alex on making an introduction — not on the product.</p><div class="tip-list"><div class="tip"><strong>Ask:</strong> "I'll build a one-pager for your boss — ROI case, whatever he needs. Would you forward it with your own note?"</div><div class="tip"><strong>If he hesitates:</strong> "You were sold on this — what would it take for your boss to see what you saw?"</div><div class="tip"><strong>Loop close:</strong> "If timing changes in Q3, I want to be your first call. Can I reach out in 60 days?"</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>Who was the real decision-maker? What was the key question when the budget objection came up? What does the "close the loop" move accomplish even when the deal doesn't close?</p></div>`,cta:null}
-    ]},
-  { id:'coldcall', name:'The Cold Call', setting:'Phone — total stranger, 30 seconds', tagline:'They didn\'t ask for this. You have one sentence.', goal:'Get a 15-minute meeting booked', difficulty:4, color:'#06b6d4',
-    situation:'Jamie Torres, 38, VP of Operations at a logistics company. No idea who you are. Answered because it\'s a local number. You have 20–30 seconds before she decides to hang up.',
-    context:['Has never heard of your company','Answers unknown calls occasionally','Operations leader: cares about efficiency, cost, and time'],
-    opening:'"Hello? Who is this?"',
-    objections:['"I\'m not interested."','"We already have a vendor for that."','"Just send me an email."'],
-    stages:[
-      {label:'OPEN',title:'30-Second Hook',content:`<p>One sentence to earn the next 30 seconds.</p><div class="tip-list"><div class="tip"><strong>Framework:</strong> Name → Company → Relevance → Ask. "Jamie, I'm [Name] at [Company]. We help logistics ops teams cut dispatch time by 20%. Worth 15 minutes?"</div><div class="tip"><strong>Don't:</strong> Ask "Is this a bad time?" — you're handing her the exit.</div></div>`,cta:'She stays on → Bond'},
-      {label:'BOND',title:'Earn the Conversation',content:`<p>She stayed on. Qualify fast — don't pitch yet.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "What does your current dispatch process look like — specifically the handoff between routing and driver confirmation?"</div><div class="tip"><strong>Why:</strong> Specific questions signal you know her world. Generic signals you're reading a script.</div></div>`,cta:'She engages → Objection drops'},
-      {label:'OBJECTION',title:'The Brush-Off',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"Look, I appreciate it, but we already have a vendor for this. I don't really see the need."</div></div><div class="tip-list"><div class="tip"><strong>Don't argue the vendor:</strong> "Most of our clients had a vendor too — they use us for the gaps that vendor doesn't cover. What are you using now?"</div><div class="tip"><strong>Reframe the ask:</strong> "I'm not asking you to switch anything. Just 15 minutes to show you what the gap looks like."</div></div>`,cta:'Curiosity opened → Close'},
-      {label:'CLOSE',title:'Book the Meeting',content:`<p>One goal: 15 minutes on the calendar.</p><div class="tip-list"><div class="tip"><strong>Assumptive:</strong> "Are you typically better Tuesday or Wednesday afternoon?"</div><div class="tip"><strong>If hesitating:</strong> "I'll send a one-pager before so you know exactly what we're covering — no surprises."</div><div class="tip"><strong>Don't extend the call.</strong> You got the meeting — stop selling.</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>What made the 30-second hook work or not? How did the specific question in bond change the energy? What's the one thing that books the meeting — and what kills it?</p></div>`,cta:null}
-    ]},
-  { id:'budget', name:'The Budget Freeze', setting:'End-of-quarter call — deal was done', tagline:'The money was there. Now it\'s not.', goal:'Keep the deal alive for next quarter', difficulty:3, color:'#f59e0b',
-    situation:'Chris Webb, 45, Director of IT. 6-week sales cycle. Loved the demo, passed internal review. Two days before signing, budget gets frozen company-wide. It\'s not personal — it\'s a macro decision from above.',
-    context:['6-week cycle — he was fully sold','Budget freeze came from finance, not Chris','His boss approved the product — timing is the only issue'],
-    opening:'"Hey, I\'ve got some bad news. Finance just froze all discretionary spend for the quarter. I\'m really sorry."',
-    objections:['"There\'s nothing I can do — it\'s company-wide."','"I can\'t justify the spend right now."','"Can we revisit in Q2?"'],
-    stages:[
-      {label:'OPEN',title:'Absorb the News',content:`<p>The deal isn't dead — it's paused. Your energy in the first 10 seconds matters.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "I appreciate you calling me directly — a lot of people would've gone quiet. That tells me a lot about how you work." Then pause.</div><div class="tip"><strong>Don't:</strong> Start problem-solving immediately. Let him feel heard first.</div></div>`,cta:'He relaxes → Bond'},
-      {label:'BOND',title:'Stay on His Side',content:`<p>He's frustrated too. Be his ally, not his problem.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "What's your read on the timeline — is this a 30-day thing or does Q2 look more realistic?"</div><div class="tip"><strong>Explore:</strong> "Is there any path — even a smaller scope — that might fall under a different budget line?"</div></div>`,cta:'He\'s open → Objection drops'},
-      {label:'OBJECTION',title:'The Hard Stop',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"There's genuinely nothing I can do this quarter. Finance locked it down. I'm not in a position to push back on this one."</div></div><div class="tip-list"><div class="tip"><strong>Accept it cleanly.</strong> Don't fight a real budget freeze — looks desperate.</div><div class="tip"><strong>Lock in Q2:</strong> "Can we get something on the calendar now for the first week of Q2, so this doesn't start from scratch?"</div><div class="tip"><strong>Protect the deal:</strong> "I'll hold your pricing through the freeze — I don't want you to lose what we negotiated."</div></div>`,cta:'Q2 path locked → Close'},
-      {label:'CLOSE',title:'Bridge to Next Quarter',content:`<p>Leave with a date and protected terms.</p><div class="tip-list"><div class="tip"><strong>The close:</strong> "Let's schedule the kickoff call for Q2 week 1. I'll send a hold for your calendar today."</div><div class="tip"><strong>Lock the price:</strong> "I'll put in writing that your rate is locked — no need to re-negotiate."</div><div class="tip"><strong>Stay visible:</strong> "I'll check in once mid-quarter just to keep momentum."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>Why is absorbing the news calmly so important? What's the risk of fighting a real budget freeze? What two things should you lock in before hanging up?</p></div>`,cta:null}
-    ]},
-  { id:'competitor', name:'The Competitor Name-Drop', setting:'Discovery call — they open with the other guy', tagline:'You\'re the backup meeting. Change that.', goal:'Reframe so you\'re the front-runner', difficulty:4, color:'#ec4899',
-    situation:'Dana Reyes, 33, Head of Marketing. Her first sentence: she\'s already talking to your biggest competitor. She may just be doing due diligence.',
-    context:['Already in conversations with your main competitor','Responded to your ad — curious but not committed','Marketing leader: cares about ROI and speed to results'],
-    opening:'"We\'re already pretty far along with [Competitor]. I\'m not sure what you can offer that\'s different, honestly."',
-    objections:['"[Competitor] is already set up to do this."','"I don\'t want to slow down our timeline."','"Why would I switch mid-process?"'],
-    stages:[
-      {label:'OPEN',title:'Don\'t Panic, Don\'t Attack',content:`<p>How you handle this tells her everything about how you handle pressure.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "That's actually useful context — helps me make this call worth your time. Can I ask how far along you are with them?"</div><div class="tip"><strong>Why:</strong> Calm and curious, not defensive or desperate.</div></div>`,cta:'She opens up → Bond'},
-      {label:'BOND',title:'Find the Gaps They Left',content:`<p><strong>Mission:</strong> Find out what the competitor has promised — and what they haven't covered.</p><div class="tip-list"><div class="tip"><strong>Questions:</strong> "What's been most compelling so far?" then "What's still unclear for you?"</div><div class="tip"><strong>Listen for:</strong> Hesitations and things that "seem fine" — those are your openings.</div></div>`,cta:'Gap identified → Objection drops'},
-      {label:'OBJECTION',title:'The Commitment Objection',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"Look, we're already pretty far along. I don't want to slow things down or confuse the process by adding another vendor."</div></div><div class="tip-list"><div class="tip"><strong>Validate:</strong> "That's smart — switching mid-process has real costs."</div><div class="tip"><strong>Reframe:</strong> "The question isn't whether to switch — it's whether you've seen enough to make a confident decision. Have you?"</div><div class="tip"><strong>Plant the seed:</strong> "If I can show you one thing they haven't addressed, is that worth 20 minutes?"</div></div>`,cta:'Curiosity opened → Close'},
-      {label:'CLOSE',title:'Win the Second Look',content:`<p>You're closing a demo — not the deal.</p><div class="tip-list"><div class="tip"><strong>The ask:</strong> "Give me 20 minutes to show you the one area where we typically win. If it's not relevant, you walk away more confident in your current direction."</div><div class="tip"><strong>Low pressure:</strong> "You're not slowing down — you're making sure the decision is the right one."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>How did not attacking the competitor help? What did you learn in bond that became your close? What's the difference between closing the deal and closing the next step?</p></div>`,cta:null}
-    ]},
-  { id:'urgency', name:'The Slow Walker', setting:'Third follow-up — no urgency', tagline:'They like it. They just don\'t care enough to move.', goal:'Create urgency without being pushy', difficulty:3, color:'#84cc16',
-    situation:'Jordan Blake, 40, Operations Manager. Great demo two weeks ago. Said "I\'ll get back to you." Two follow-ups since — pleasant but zero movement. No urgency, no pushback, no decision.',
-    context:['Had a great demo two weeks ago','Two follow-ups since — friendly but zero movement','No urgency, no deadline, no internal champion'],
-    opening:'"Oh hey! Yeah, sorry — things have been busy. I still think it looks good, just haven\'t had time to pull the trigger."',
-    objections:['"I just haven\'t had time."','"It\'s not a priority right now."','"Can we revisit next month?"'],
-    stages:[
-      {label:'OPEN',title:'Don\'t Accept "Busy"',content:`<p>"Busy" means your product isn't urgent enough yet. Your job is to fix that.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "Totally get it. Can I ask — what would need to happen for this to become a priority?"</div><div class="tip"><strong>Why:</strong> Forces her to articulate what urgency actually looks like for her.</div></div>`,cta:'She reflects → Bond'},
-      {label:'BOND',title:'Surface the Hidden Pain',content:`<p><strong>Mission:</strong> Find the problem costing her right now — even if she's adapted to it.</p><div class="tip-list"><div class="tip"><strong>Question:</strong> "The problem we talked about solving — is that still happening every week?"</div><div class="tip"><strong>Then:</strong> "What's it actually costing in hours per week?" Quantify the pain she's normalized.</div></div>`,cta:'Pain surfaced → Objection drops'},
-      {label:'OBJECTION',title:'The No-Urgency Trap',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"Look, it's just not a priority right now. I know I should deal with it, but there's always something more urgent."</div></div><div class="tip-list"><div class="tip"><strong>Make it tangible:</strong> "You said this costs ~5 hours a week. That's 60 hours a month. At what point does that become a priority?"</div><div class="tip"><strong>Soft urgency:</strong> "I have a price lock that expires end of month — I want you to get the rate we discussed."</div></div>`,cta:'Urgency created → Close'},
-      {label:'CLOSE',title:'The Deadline Close',content:`<p>Give her a reason to decide now — without being aggressive.</p><div class="tip-list"><div class="tip"><strong>Price lock:</strong> "I can hold your pricing through Friday. After that it goes back to standard."</div><div class="tip"><strong>Low-barrier:</strong> "Can we do a 15-minute call this week with your team lead so it's not just on your plate?"</div><div class="tip"><strong>Final move:</strong> "I don't want to keep following up forever. If now's not right, just tell me — I'll close your file and reach out in 90 days."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>How do you create urgency without pressure? What question surfaced the real cost of doing nothing? Why is the "close your file" line effective — and when does it backfire?</p></div>`,cta:null}
-    ]},
-  { id:'firstbuyer', name:'The First-Time Buyer', setting:'Walk-in — no experience, overwhelmed', tagline:'They don\'t know what they don\'t know.', goal:'Build enough trust to close a starter package', difficulty:2, color:'#34d399',
-    situation:'Mia Santos, 24, just started her first real job. Referred by a family friend to look into investing. Knows almost nothing about it and walks in looking lost.',
-    context:['First job, first paycheck with real money','Referred by a family friend — warm but nervous','Intimidated by finance, afraid of saying the wrong thing'],
-    opening:'"Um, hi. I was told I should come talk to someone about... investing? I honestly don\'t really know where to start."',
-    objections:['"This feels like a lot."','"I\'m worried about losing money."','"I need to talk to my parents first."'],
-    stages:[
-      {label:'OPEN',title:'Don\'t Overwhelm Her',content:`<p>She's nervous. Your first job is to make her feel safe — not sold.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "You're in exactly the right place. Most people wait way too long — the fact that you're here now puts you ahead."</div><div class="tip"><strong>Then:</strong> "Tell me a little about where you are right now — new job? Trying to figure out what to do with your first paycheck?"</div></div>`,cta:'She relaxes → Bond'},
-      {label:'BOND',title:'Teach, Don\'t Pitch',content:`<p><strong>Mission:</strong> Make her feel smart for being here. Ask about her life, not her money.</p><div class="tip-list"><div class="tip"><strong>Question:</strong> "What does security look like to you — a cushion for emergencies, or growing what you have over time?"</div><div class="tip"><strong>Language:</strong> Plain English only. If you say "allocation" or "volatility," you lose her.</div></div>`,cta:'She trusts you → Objection drops'},
-      {label:'OBJECTION',title:'The Fear Objection',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"I think I need to talk to my parents before I do anything. I don't want to make the wrong decision."</div></div><div class="tip-list"><div class="tip"><strong>Don't push.</strong> Respect the instinct — use it.</div><div class="tip"><strong>Validate:</strong> "That's smart. What would help you explain this to them?"</div><div class="tip"><strong>Tool:</strong> Offer to create a simple one-pager she can show her parents.</div></div>`,cta:'Fear addressed → Close'},
-      {label:'CLOSE',title:'The Starter Close',content:`<p>You're not closing a big investment — you're closing the first step.</p><div class="tip-list"><div class="tip"><strong>Low-barrier:</strong> "What if we started with something small — just enough to get familiar with how it works? You can always add more later."</div><div class="tip"><strong>Normalize:</strong> "Most of our clients started exactly where you are."</div><div class="tip"><strong>One-pager offer:</strong> "Let me put together something simple for your parents — takes the pressure off the conversation."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>How do you sell to someone who doesn't know what they want? Why is "talk to my parents" different from "I need to think about it"? What's the right close for a first-time buyer?</p></div>`,cta:null}
-    ]},
-  { id:'upgrade', name:'The Upgrade Sell', setting:'Existing client call — upsell opportunity', tagline:'They already trust you. Don\'t blow it.', goal:'Upgrade them without it feeling like a cash grab', difficulty:2, color:'#818cf8',
-    situation:'Pat Kim, 37, has been a client for 14 months. Happy with the base plan. Usage data shows they\'ve maxed out their current tier 4 months in a row. There\'s a real case — but lead with price and you risk the relationship.',
-    context:['14-month client, happy with current plan','Hit the usage cap 4 months straight','Decision-maker is Pat — no committee needed'],
-    opening:'"Hey! Good to hear from you. What\'s up?"',
-    objections:['"I wasn\'t expecting an extra cost."','"We\'re happy with what we have."','"I need to think about whether we actually need more."'],
-    stages:[
-      {label:'OPEN',title:'Lead With the Data',content:`<p>You have a legitimate reason to call. Lead with the observation, not the offer.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "I was looking at your account and noticed something — you've hit your usage cap four months in a row. I wanted to flag it before it causes problems."</div><div class="tip"><strong>Not:</strong> "I'm calling because we have an upgrade that might interest you." That's a sales call immediately.</div></div>`,cta:'He\'s curious → Bond'},
-      {label:'BOND',title:'Find What\'s Driving the Growth',content:`<p><strong>Mission:</strong> Understand what's driving the usage — it becomes your upgrade case.</p><div class="tip-list"><div class="tip"><strong>Question:</strong> "What's been going on on your end? Scaling the team, new projects?"</div><div class="tip"><strong>Listen for:</strong> Growth signal. If they're hitting the cap because the business is growing, the upgrade is easy — it's part of the story.</div></div>`,cta:'Growth confirmed → Objection drops'},
-      {label:'OBJECTION',title:'The Cost Surprise',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"I wasn't expecting another cost. We're already paying for the plan — I thought that covered everything we'd need."</div></div><div class="tip-list"><div class="tip"><strong>Validate:</strong> "Totally fair — the base plan should've been enough when you started. What changed is your volume grew."</div><div class="tip"><strong>ROI frame:</strong> "You're paying for coverage that no longer fits what you're doing. The upgrade closes that gap."</div><div class="tip"><strong>Cost of NOT upgrading:</strong> "The alternative is hitting the cap and losing access mid-month — which is worse."</div></div>`,cta:'Makes sense → Close'},
-      {label:'CLOSE',title:'The Seamless Upgrade',content:`<p>Make it feel like a natural next step.</p><div class="tip-list"><div class="tip"><strong>Assumptive:</strong> "I can move you over today — goes into effect at the start of next billing cycle so there's no interruption."</div><div class="tip"><strong>Lock it:</strong> "I'll credit this month's overage since we're making the change now — fair?"</div><div class="tip"><strong>Don't over-explain.</strong> He's already a client. He trusts you. Keep it simple.</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>Why does leading with data change the tone? What's the risk of leading with price on an existing client? How is the upsell close different from a new client close?</p></div>`,cta:null}
-    ]},
-  { id:'executive', name:'The C-Suite', setting:'Conference — 90 seconds with the CEO', tagline:'No deck, no demo. Just words.', goal:'Walk away with a scheduled meeting', difficulty:5, color:'#fbbf24',
-    situation:'Erin Park, 52, CEO of a 600-person financial services firm, ends up next to you at the coffee station at a conference. You have 90 seconds — maybe less. She didn\'t come to be pitched.',
-    context:['CEO of a 600-person firm — zero patience for fluff','Conference setting — informal, but she\'s "on"','Will evaluate you as much as what you\'re selling'],
-    opening:'"Hi. Are you with a vendor here?"',
-    objections:['"Just send me something."','"Talk to my team."','"I\'m not the right person for this."'],
-    stages:[
-      {label:'OPEN',title:'The 90-Second Hook',content:`<p>She asked one question. Your answer is the pitch.</p><div class="tip-list"><div class="tip"><strong>Frame:</strong> Name → what you solve → for who → outcome. Two sentences max.</div><div class="tip"><strong>Example:</strong> "I'm [Name] at [Company]. We help financial services firms cut compliance reporting time by 40% — most clients are 500+ employees. We're probably worth 20 minutes of your time."</div><div class="tip"><strong>Then stop talking.</strong> Give her room to respond.</div></div>`,cta:'She responds → Bond'},
-      {label:'BOND',title:'Ask One Sharp Question',content:`<p>No small talk. She respects directness.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "Can I ask — what's your biggest operational headache going into next year?"</div><div class="tip"><strong>Why:</strong> One specific question shows you care about her world. CEOs answer good questions.</div><div class="tip"><strong>Listen:</strong> Whatever she says becomes your bridge.</div></div>`,cta:'She opens up → Objection drops'},
-      {label:'OBJECTION',title:'The Deflect',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"This sounds interesting but you should really talk to my COO. I don't handle this level of detail."</div></div><div class="tip-list"><div class="tip"><strong>Don't just say yes:</strong> "Absolutely — happy to. Would it help if you made the intro, or should I reach out directly?"</div><div class="tip"><strong>Keep the door open:</strong> "And if what the COO sees looks interesting — would you want to be looped in?"</div></div>`,cta:'Path forward → Close'},
-      {label:'CLOSE',title:'Walk Away With Something Real',content:`<p>You need one concrete next step — a name, a meeting, a card.</p><div class="tip-list"><div class="tip"><strong>The ask:</strong> "Could I get your card so I can reference your name when I reach out to the COO?"</div><div class="tip"><strong>If she gives it:</strong> "I'll send a one-pager today — if it resonates, your COO can escalate it. Fair?"</div><div class="tip"><strong>If she deflects again:</strong> "No worries — I'll find the COO on LinkedIn and mention we crossed paths."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>What made the 90-second hook work? How is a C-suite conversation different from a normal pitch? What's the one thing you need to walk away with — and why?</p></div>`,cta:null}
-    ]},
-  { id:'angry', name:'The Angry Client', setting:'Inbound call — they want to cancel', tagline:'Retention is harder than acquisition.', goal:'Save the account without making promises you can\'t keep', difficulty:4, color:'#f43f5e',
-    situation:'Sam Ortiz, 41, has been a client for 8 months. Calling to cancel. Service issue last month, slow resolution. He\'s not just unhappy — he thinks he\'s already decided.',
-    context:['8-month client, was previously happy','Service failure last month — slow resolution','Already researching competitors — emotionally checked out'],
-    opening:'"Yeah, I want to cancel my account. I\'ve had enough. The service issue last month was unacceptable."',
-    objections:['"I\'ve already made up my mind."','"I don\'t trust that it won\'t happen again."','"I found a better option."'],
-    stages:[
-      {label:'OPEN',title:'Don\'t Defend — Absorb',content:`<p>He's angry and thinks he's decided. First job: make him feel heard.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> "I hear you — and I'm not going to try to talk you out of anything before I fully understand what happened. Can you walk me through it?"</div><div class="tip"><strong>Don't say:</strong> "I understand your frustration." He'll hear it as a script.</div></div>`,cta:'He vents → Bond'},
-      {label:'BOND',title:'Get to the Real Problem',content:`<p>The service issue is the surface. Find what actually broke.</p><div class="tip-list"><div class="tip"><strong>Question:</strong> "When did you first feel like we dropped the ball — was it the issue itself, or the way it was handled after?"</div><div class="tip"><strong>Why:</strong> Often clients don't care about the issue as much as feeling ignored during the response.</div></div>`,cta:'Real problem found → Objection drops'},
-      {label:'OBJECTION',title:'The Decided Mind',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"Look, I appreciate you listening, but I've already made up my mind. I just don't trust that this won't happen again."</div></div><div class="tip-list"><div class="tip"><strong>Respect the position:</strong> "I'm not going to pressure you. But can I ask — what would have needed to happen for you to still be a client today?"</div><div class="tip"><strong>If he answers:</strong> That's your save. Only offer what you can actually deliver.</div><div class="tip"><strong>If he won't engage:</strong> "I understand. I'll process the cancellation — and I'll note what happened so it doesn't happen to the next person."</div></div>`,cta:'Opening created → Close'},
-      {label:'CLOSE',title:'The Retention Close',content:`<p>Only offer a save if you can back it up.</p><div class="tip-list"><div class="tip"><strong>If there's a path:</strong> "What if I escalate your account to our senior team, credit last month, and you give us 30 days to prove it's fixed. If it happens again, I'll process the cancellation myself."</div><div class="tip"><strong>If there's no path:</strong> Exit with dignity. "I'll get this processed. I'm sorry we let you down — you deserved better."</div><div class="tip"><strong>Goodbye close:</strong> "If you ever want to revisit, ask for me directly."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>Why does absorbing the anger first change the conversation? What's the difference between saving an account and making empty promises? When is it right to let a client go?</p></div>`,cta:null}
-    ]},
-  { id:'referralask', name:'The Referral Ask', setting:'Post-close call — mining for referrals', tagline:'Most reps forget this step. You won\'t.', goal:'Walk away with 2 qualified referral names', difficulty:1, color:'#2dd4bf',
-    situation:'You just closed Kelly Morris, 36, on a 12-month contract. She\'s excited. Peak satisfaction. You have a 3-minute window before the excitement fades. Most reps hang up. You don\'t.',
-    context:['Just closed — peak satisfaction moment','High energy, excited about getting started','Has a network of similar professionals'],
-    opening:'"I\'m so excited to get started! When do we kick things off?"',
-    objections:['"I\'ll have to think about who to refer."','"I don\'t want to refer someone before I know it\'s great."','"Can I wait until I\'ve used it a bit first?"'],
-    stages:[
-      {label:'OPEN',title:'Ride the Excitement',content:`<p>She's thrilled. Match her energy. Then make the pivot naturally.</p><div class="tip-list"><div class="tip"><strong>Move:</strong> Confirm the kickoff details, then: "Before I let you go — can I ask you something real quick?"</div><div class="tip"><strong>The pause:</strong> Let her say yes. It creates a micro-commitment before you ask.</div></div>`,cta:'She engages → Bond'},
-      {label:'BOND',title:'Frame It as Helping Someone',content:`<p>Frame the referral as helping someone she knows — not generating a lead for you.</p><div class="tip-list"><div class="tip"><strong>Script:</strong> "I built most of my business through clients like you — people who genuinely benefited and knew someone else who could too."</div><div class="tip"><strong>Then:</strong> "Is there anyone in your circle dealing with the same thing you were?"</div></div>`,cta:'She thinks → Objection drops'},
-      {label:'OBJECTION',title:'The Wait Objection',content:`<div class="objection-reveal"><div class="obj-label">⚠ OBJECTION DROPS</div><div class="obj-text">"I want to wait until I've actually used it — I don't want to refer someone before I know it's great."</div></div><div class="tip-list"><div class="tip"><strong>Respect it:</strong> "That makes total sense — I wouldn't ask you to vouch for something you haven't experienced."</div><div class="tip"><strong>Reframe:</strong> "What if I reached out and just mentioned you suggested the conversation — no pressure, you're just making the intro?"</div><div class="tip"><strong>Softer ask:</strong> "Who comes to mind, even if the timing isn't perfect?"</div></div>`,cta:'Name surfaces → Close'},
-      {label:'CLOSE',title:'Lock the Names',content:`<p>Get two names. That's the whole goal.</p><div class="tip-list"><div class="tip"><strong>The close:</strong> "Who's one person — even if you're not sure they need it — you'd think would at least want to hear about this?"</div><div class="tip"><strong>Then:</strong> "And is there a second person who comes to mind?"</div><div class="tip"><strong>Make it easy:</strong> "I'll do all the reaching out — you don't need to do anything except give me the name."</div></div><div class="debrief-block"><div class="deb-label">💬 DEBRIEF</div><p>Why is immediately after the close the best moment? How does framing it as "helping them" change the energy? What's the minimum you need to walk away with?</p></div>`,cta:null}
-    ]}
+  { person:'Dylan M', name:'Selling the Indiana University Experience', setting:'IU admissions / alumni advocate', difficulty:3, color:'#ef4444',
+    salesman:`You are a passionate Indiana University representative — maybe an admissions counselor or a proud alumni advocate. You're selling the full IU experience: the culture, the campus, the Big Ten athletics, the Kelley School of Business, the music program, Greek life, and the sense of community. You believe IU is an underrated powerhouse and that the right student would thrive there. Paint the picture of what life at IU actually looks and feels like.`,
+    prospect:`You are a high school senior or the parent of one who hasn't seriously considered IU. You're looking at bigger name schools or out-of-state options and see IU as a backup at best. You're not dismissive, but you need a real compelling reason to put it on your short list. Ask real questions — academics, social life, career outcomes, value.` },
+  { person:'Dylan M', name:'Selling a Rolex', setting:'High-end jeweler', difficulty:3, color:'#fbbf24',
+    salesman:`You are a luxury watch consultant at a high-end jeweler. You're not just selling a watch — you're selling legacy, craftsmanship, and status. You know every detail about the piece. You believe a Rolex is an investment and a statement. Don't apologize for the price. Sell the identity that comes with it.`,
+    prospect:`You are a successful professional who can afford the watch but is questioning whether it's worth it. You keep bringing up the price and asking why you can't just buy a nice $200 watch. You need to be sold on the value beyond just telling time.` },
+  { person:'The Black Pearl', name:'Selling a Box Cutter', setting:'Tool & hardware sales', difficulty:2, color:'#22c55e',
+    salesman:`You are a tool and hardware sales rep selling a premium, professional-grade box cutter — not the cheap ones from the dollar store. It's ergonomic, safe, durable, and built for people who use it all day. You believe in the product and know who needs it. Find out what the prospect does and tailor your pitch accordingly.`,
+    prospect:`You work in a warehouse or shipping environment and already have a basic box cutter. You're skeptical about why you'd spend more on a "fancy" one. You're practical and price-conscious. Make the salesman work for it.` },
+  { person:'The Black Pearl', name:'Selling an Oura Ring', setting:'Health tech sales', difficulty:3, color:'#3b82f6',
+    salesman:`You are a health tech sales rep selling the Oura Ring — a smart ring that tracks sleep, recovery, heart rate, and readiness. You're selling the idea that knowing your body's data leads to better performance and health decisions. It's sleek, wearable, and packed with insight. Lead with the lifestyle and the benefits, not just the specs.`,
+    prospect:`You are a moderately health-conscious person who already uses a Fitbit or Apple Watch. You're not sure why you'd need another wearable. You're curious but unconvinced. Challenge them on why this is better than what you already have.` },
+  { person:'Matthew', name:'Why a Golfer Should Hire a Caddy', setting:'On the course', difficulty:3, color:'#84cc16',
+    salesman:`You are an experienced caddy making the case for your services. You're not just carrying a bag — you know the course, you read greens, you track wind, you manage your player's mental game, and you help them make smarter decisions every hole. You've helped golfers shave strokes just by being present. Sell the competitive edge and the experience.`,
+    prospect:`You are a recreational golfer who has always carried your own bag or used a cart. You think caddies are only for pros and that hiring one feels unnecessary or pretentious. You need to be shown the real, practical value before you'd ever consider it.` },
+  { person:'Matthew', name:'Selling Steak (as a Butcher)', setting:'Local butcher shop', difficulty:2, color:'#f43f5e',
+    salesman:`You are a skilled local butcher who takes pride in your craft. You're selling premium cuts of steak — dry-aged, properly trimmed, sourced from quality farms. You know the difference between every cut and how to cook each one. You're competing against the grocery store and you know it. Sell the quality, the knowledge, and the personal experience of buying from a real butcher.`,
+    prospect:`You are a home cook who buys steak from the grocery store because it's easy and cheap. You're not sure what makes a butcher's steak worth more. You grill occasionally and think a steak is a steak. Make them prove the difference.` },
+  { person:'Sean', name:'Selling Running Shoes', setting:'Specialty running store', difficulty:2, color:'#06b6d4',
+    salesman:`You are a specialty running store associate selling a high-performance running shoe — not a fashion sneaker. You know gait analysis, arch support, cushioning types, and what different runners need. You genuinely want to find the right shoe for this person, but you're also moving product. Diagnose before you prescribe — ask questions first.`,
+    prospect:`You are someone who just decided to get into running. You came in thinking you'd grab whatever looks good or is on sale. You don't know much about running shoes and are a little overwhelmed by the options. Be curious, ask questions, but keep getting drawn back to cheaper options.` },
+  { person:'Sean', name:'Selling a Coaching Service', setting:'Personal running coach', difficulty:4, color:'#a855f7',
+    salesman:`You are a personal running coach selling a structured coaching program — training plans, accountability check-ins, race strategy, and ongoing feedback. You believe most people plateau or get injured because they train without guidance. You're selling results, not just a service. Know your value and don't undersell it.`,
+    prospect:`You are a self-taught runner who has done a few 5Ks and thinks you're doing fine on your own. You use free apps and YouTube videos. You're not sure why you'd pay for a coach when all that information is free online. Make them convince you it's actually worth the money.` },
+  { person:'Josh', name:'Selling Smoothies', setting:'Premium smoothie shop', difficulty:2, color:'#34d399',
+    salesman:`You are a smoothie shop owner or brand rep selling your premium smoothie line. These aren't gas station smoothies — they're made with whole ingredients, no artificial sugars, and designed around nutrition and taste. You're passionate about the product and believe it's a game changer for people's energy and health. Know your bestsellers and be ready to customize for the customer in front of you.`,
+    prospect:`You are someone who drinks coffee every morning and has never really gotten into smoothies. You think they're either too sweet, too expensive, or just not filling enough. You're open to trying something new but need a real reason to make the switch or add it to your routine.` },
+  { person:'Josh', name:'Selling a Diet Plan', setting:'Nutrition / wellness coach', difficulty:4, color:'#f97316',
+    salesman:`You are a nutrition coach or wellness consultant selling a structured, personalized diet plan. This isn't a fad diet — it's a sustainable, science-backed approach to eating built around someone's lifestyle and goals. You can tailor it for weight loss, muscle gain, energy, or overall health. Sell the structure, the accountability, and the long-term results. Know how to separate your plan from just Googling "how to eat healthy."`,
+    prospect:`You are someone who has tried to eat better before but always falls off after a week or two. You've cut carbs, tried meal kits, watched YouTube nutrition videos. You're skeptical that paying for a diet plan will be any different from what you've already tried. Make them convince you this time will actually be different.` },
+  { person:'Dimitri', name:'Selling Drumstick Brushes', setting:'Percussion gear / working musician', difficulty:3, color:'#818cf8',
+    salesman:`You are a percussion gear rep or working musician selling a premium set of drumstick brushes — used for jazz, acoustic sets, and lower-volume playing. You know that brushes open up a whole new world of dynamics and expression for drummers. Sell the artistry and versatility. Know your product and be ready to speak to different playing styles.`,
+    prospect:`You are a drummer who has only ever played with regular sticks. You've never really thought about brushes and aren't sure they're relevant to your style. You mostly play rock or pop. Make them show you why this matters for you specifically — don't just take their word for it.` },
+  { person:'Dimitri', name:'Selling Life Coaching', setting:'1-on-1 life coach', difficulty:5, color:'#ec4899',
+    salesman:`You are a certified life coach selling a one-on-one coaching program. You help people get unstuck — whether it's career, relationships, habits, or mindset. You're not a therapist, but you ask powerful questions and help people build real momentum. Sell transformation, not sessions. Be confident in your value and be ready to handle the skepticism head on.`,
+    prospect:`You are someone who feels a little stuck but is skeptical of life coaching. You think it might be common sense wrapped in a fancy package or just someone charging money to be a glorified hype man. You've heard the buzzwords and rolled your eyes. Make them show you that this is specific, real, and worth the investment.` },
+  { person:'Dylan H', name:'Selling a Fishing Reel to an Intermediate Fisherman', setting:'Fishing gear specialist', difficulty:4, color:'#0ea5e9',
+    salesman:`You are a fishing gear specialist selling a mid-to-high-end spinning or baitcasting reel. This person knows enough to appreciate quality, so skip the basics and get into gear ratios, drag systems, line capacity, and durability. Sell the upgrade. Make them feel like they've outgrown their old reel and are ready for something serious.`,
+    prospect:`You are an intermediate fisherman who knows your way around gear but bought a budget reel when you started and have stuck with it. It works fine. You're browsing but not convinced you need to spend more. You know enough to ask technical questions — use them to test the salesperson and see if they really know their stuff.` },
+  { person:'Dylan H', name:"Selling Logan's AI Consulting to a Business Owner", setting:'AI consultant', difficulty:5, color:'#888',
+    salesman:`You are an AI consultant representing Logan's service, pitching to a small or mid-size business owner. You help businesses identify where AI can save time, cut costs, and create competitive advantage — whether that's automating workflows, improving customer service, or analyzing data. You're not selling hype, you're selling practical results. Ask good discovery questions, be specific, and make the technology feel approachable.`,
+    prospect:`You are a business owner who has heard a lot about AI but hasn't done anything with it. You're overwhelmed, a little skeptical, and worried about cost and disruption to your team. You're not a tech person and have been burned by overpromised software before. Make them earn your trust and prove this is actually worth pursuing.` }
 ];
 
 function showScreen(id) {
@@ -527,7 +413,7 @@ function saveInterns(){
   localStorage.setItem('sa_interns',JSON.stringify(currentInterns));
   localStorage.setItem('sa_scores',JSON.stringify(scores));
   document.getElementById('setup-modal').classList.remove('show');
-  renderScoreboard(); showScreen('home');
+  showScreen('home');
 }
 
 function renderTeachSidebar(){
@@ -555,7 +441,7 @@ function revealActivity(btn){btn.nextElementSibling.classList.add('show');btn.st
 function teachNav(dir){const n=currentTeachChapter+dir;if(n<0||n>=CHAPTERS.length)return;loadTeachChapter(n);}
 
 function renderScenarioGrid(){
-  document.getElementById('scenario-grid').innerHTML=SCENARIOS.map((s,i)=>`<div class="scenario-card" onclick="openWhoPlays(${i})"><div class="diff-bar diff-${s.difficulty}"></div><div class="card-body"><div class="card-setting">${s.setting}</div><div class="card-name">${s.name}</div><div class="card-tagline">${s.tagline}</div><div class="card-goal">🎯 ${s.goal}</div><div class="diff-stars">${'★'.repeat(s.difficulty)}${'☆'.repeat(5-s.difficulty)}</div></div><div class="card-footer">▶ Run This Scenario</div></div>`).join('');
+  document.getElementById('scenario-grid').innerHTML=SCENARIOS.map((s,i)=>`<div class="scenario-card" onclick="openWhoPlays(${i})"><div class="diff-bar diff-${s.difficulty}"></div><div class="card-body"><div class="card-person">${s.person}</div><div class="card-name">${s.name}</div><div class="card-setting">${s.setting}</div><div class="diff-stars">${'★'.repeat(s.difficulty)}${'☆'.repeat(5-s.difficulty)}</div></div><div class="card-footer">▶ Run This Scenario</div></div>`).join('');
 }
 
 function openWhoPlays(idx){
@@ -573,89 +459,66 @@ function startScenario(){
 }
 
 function launchScenario(idx){
-  currentScenarioIdx=idx; currentStage=0; stagesUnlocked=0;
+  currentScenarioIdx=idx;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('scenario-play').classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('play-title').textContent=SCENARIOS[idx].name;
-  document.getElementById('active-player-display').textContent=activePlayer||'—';
-  renderBench(); renderStage(0); resetStageTabs(0);
+  const sc=SCENARIOS[idx];
+  document.getElementById('play-title').textContent=sc.name;
+  document.getElementById('active-player-tag').innerHTML=activePlayer?`<span class="active-player-pill">🎤 ${activePlayer}</span>`:'';
+  renderPlay();
 }
 function closeScenario(){document.getElementById('scenario-play').classList.remove('active');showScreen('arena');}
-function resetStageTabs(unlocked){
-  document.querySelectorAll('.stage-tab').forEach((t,i)=>{
-    t.classList.remove('active','locked');
-    if(i>unlocked)t.classList.add('locked');
-    if(i===currentStage)t.classList.add('active');
-  });
-}
-function goStage(n){
-  if(n>stagesUnlocked)return;
-  currentStage=n;
-  document.querySelectorAll('.stage-tab').forEach((t,i)=>{t.classList.remove('active');if(i===n)t.classList.add('active');});
-  renderStage(n);
-}
-function renderStage(n){
+
+function renderPlay(){
   const sc=SCENARIOS[currentScenarioIdx];
-  let html='';
-  if(n===0){
-    html=`<div class="brief-wrap">
-      <div class="brief-setting">${sc.setting}</div>
-      <h2>${sc.name}</h2>
-      <div class="brief-section"><div class="brief-label">The Situation</div><p>${sc.situation}</p></div>
-      <div class="brief-section"><div class="brief-label">What You're Working With</div><ul class="brief-bullets">${sc.context.map(c=>`<li>${c}</li>`).join('')}</ul></div>
-      <div class="brief-section"><div class="brief-label">Their Opening Line</div><div class="opening-line"><div class="ol-label">⚠ THEY OPEN WITH</div><div class="ol-text">${sc.opening}</div></div></div>
-      <div class="brief-section"><div class="brief-label">Objections They'll Throw</div><ul class="brief-bullets">${sc.objections.map(o=>`<li>${o}</li>`).join('')}</ul></div>
-      <div class="goal-box">🎯 Your Goal: ${sc.goal}</div>
-      <button class="stage-btn" style="margin-top:24px;" onclick="advanceStage()">Ready — Start the Scenario →</button>
+  document.getElementById('play-main').innerHTML=`
+    <div class="play-wrap">
+      <div class="play-meta">
+        <div class="play-person">${sc.person}</div>
+        <h2 class="play-name">${sc.name}</h2>
+        <div class="play-setting">${sc.setting} · ${'★'.repeat(sc.difficulty)}${'☆'.repeat(5-sc.difficulty)}</div>
+        <p class="play-hint">Each card is face-down. Tap your role to reveal it — tap again to hide so the other person can look away. The salesman and the prospect should never read each other's card.</p>
+      </div>
+      <div class="flip-row">
+        <div class="flip-card" id="flip-sales" onclick="toggleFlip('sales')">
+          <div class="flip-inner">
+            <div class="flip-face flip-front sales-front">
+              <div class="flip-role">SALESMAN</div>
+              <div class="flip-tap">Tap to reveal</div>
+            </div>
+            <div class="flip-face flip-back">
+              <div class="flip-role-sm sales-role">SALESMAN — YOUR BRIEF</div>
+              <div class="flip-text">${sc.salesman}</div>
+              <div class="flip-hide">Tap to hide</div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" id="flip-prospect" onclick="toggleFlip('prospect')">
+          <div class="flip-inner">
+            <div class="flip-face flip-front prospect-front">
+              <div class="flip-role">PROSPECT</div>
+              <div class="flip-tap">Tap to reveal</div>
+            </div>
+            <div class="flip-face flip-back">
+              <div class="flip-role-sm prospect-role">PROSPECT — YOUR BRIEF</div>
+              <div class="flip-text">${sc.prospect}</div>
+              <div class="flip-hide">Tap to hide</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="play-actions"><button class="try-again-btn" onclick="closeScenario()">← Back to Scenarios</button></div>
     </div>`;
-  } else {
-    const stage=sc.stages[n-1];
-    const isLast=n===sc.stages.length;
-    html=`<div class="stage-content"><h4>${stage.label}</h4>${stage.content}${stage.cta&&!isLast?`<button class="stage-btn" onclick="advanceStage()">✓ ${stage.cta}</button>`:''}${isLast?`<div style="margin-top:24px;"><button class="try-again-btn" onclick="launchScenario(${currentScenarioIdx})">↺ Try Again</button><button class="try-again-btn" onclick="closeScenario()">← Back to Arena</button></div>`:''}</div>`;
-  }
-  document.getElementById('play-main').innerHTML=html;
   document.getElementById('play-main').scrollTop=0;
 }
-function advanceStage(){
-  const maxStage=SCENARIOS[currentScenarioIdx].stages.length;
-  if(currentStage>=maxStage)return;
-  stagesUnlocked=Math.max(stagesUnlocked,currentStage+1);
-  currentStage++;
-  resetStageTabs(stagesUnlocked);
-  renderStage(currentStage);
-}
-
-function renderBench(){
-  const bench=currentInterns.filter(n=>n!==activePlayer);
-  document.getElementById('bench-list').innerHTML=bench.length?bench.map(name=>`<div class="bench-player"><div class="bench-name">${name}</div><div class="bench-score"><button class="score-btn" onclick="adjustScore('${name}',-1)">−</button><span class="score-val" id="sv-${name.replace(/\s/g,'_')}">${scores[name]||0}</span><button class="score-btn" onclick="adjustScore('${name}',1)">+</button></div></div>`).join(''):'<p style="color:var(--text-dim);font-size:0.85rem;">Add more interns to see the bench.</p>';
-}
-function adjustScore(name,delta){
-  if(!scores[name])scores[name]=0;
-  scores[name]=Math.max(0,scores[name]+delta);
-  const el=document.getElementById('sv-'+name.replace(/\s/g,'_'));
-  if(el)el.textContent=scores[name];
-  localStorage.setItem('sa_scores',JSON.stringify(scores));
-  renderScoreboard();
-}
-function toggleScoreboard(){document.getElementById('scoreboard-panel').classList.toggle('open');}
-function renderScoreboard(){
-  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
-  const rows=document.getElementById('sb-rows');
-  if(!rows)return;
-  rows.innerHTML=sorted.map(([name,pts],i)=>`<div class="score-row"><div class="score-rank ${i===0?'gold-rank':''}">${i+1}</div><div class="score-name">${name}</div><div class="score-pts">${pts} pts</div>${streak[name]>=2?'<div class="hot-badge">🔥 HOT</div>':''}</div>`).join('')||'<p style="color:var(--text-dim);font-size:0.85rem;">No scores yet.</p>';
-}
-function resetScores(){
-  if(!confirm('Reset all scores?'))return;
-  Object.keys(scores).forEach(k=>scores[k]=0);
-  streak={};
-  localStorage.setItem('sa_scores',JSON.stringify(scores));
-  renderScoreboard(); renderBench();
+function toggleFlip(which){
+  document.getElementById('flip-'+which).classList.toggle('flipped');
 }
 
 function init(){
   document.getElementById('top-nav').style.display='flex';
-  renderScenarioGrid(); renderTeachSidebar(); loadTeachChapter(0); renderScoreboard();
+  renderScenarioGrid(); renderTeachSidebar(); loadTeachChapter(0);
   if(!currentInterns.length)openSetup();
   document.querySelectorAll('.intern-field').forEach(f=>f.addEventListener('keydown',e=>{if(e.key==='Enter')saveInterns();}));
 }
