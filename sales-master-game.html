@@ -1,0 +1,834 @@
+<title>Sales Master — A Tom Hopkins Training Game</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a2230;
+    --panel-2: #222d3d;
+    --ink: #eef2f7;
+    --muted: #9aa9bd;
+    --line: #2e3b4e;
+    --gold: #f2b134;
+    --gold-soft: #f2b13422;
+    --blue: #4d9fff;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --shadow: 0 12px 40px rgba(0,0,0,.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #15202e 0%, var(--bg) 55%);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  .kicker { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 8px; }
+  h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+  h1 .accent { color: var(--gold); }
+  .tagline { color: var(--muted); margin-top: 8px; font-size: 15px; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 28px; }
+
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .modes { grid-template-columns: 1fr; } h1 { font-size: 30px; } }
+  .mode-card {
+    text-align: left; cursor: pointer; background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    color: var(--ink); font: inherit;
+  }
+  .mode-card:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 8px 24px rgba(242,177,52,.12); }
+  .mode-card .icon { font-size: 26px; margin-bottom: 10px; display: block; }
+  .mode-card h3 { font-size: 17px; margin-bottom: 6px; }
+  .mode-card p { color: var(--muted); font-size: 13px; }
+  .difficulty-note {
+    margin-top: 16px; font-size: 13px; color: var(--muted); text-align: center;
+    border-top: 1px solid var(--line); padding-top: 16px;
+  }
+  .difficulty-note b { color: var(--amber); }
+  .play-all {
+    margin-top: 16px; width: 100%; border: 1px dashed var(--gold); background: var(--gold-soft);
+    color: var(--gold); font-weight: 700; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 15px; transition: background .15s ease;
+  }
+  .play-all:hover { background: #f2b13433; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; }
+  .topbar .mode-name { font-weight: 700; font-size: 14px; color: var(--gold); }
+  .stats { display: flex; gap: 16px; align-items: center; font-size: 13px; color: var(--muted); }
+  .stats b { color: var(--ink); }
+  .streak.hot { color: var(--gold); }
+  .progress { height: 6px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin-bottom: 22px; }
+  .progress > div { height: 100%; background: linear-gradient(90deg, var(--gold), #ffd479); width: 0; transition: width .35s ease; }
+
+  .tag-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+    padding: 4px 9px; border-radius: 6px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line);
+  }
+  .tag.sa { color: var(--blue); border-color: #4d9fff55; }
+  .tag.mc { color: var(--amber); border-color: #fbbf2455; }
+
+  .scene { color: var(--muted); font-size: 14px; margin-bottom: 14px; white-space: pre-line; }
+  .prospect { background: var(--panel-2); border-left: 3px solid var(--blue); padding: 16px 18px; border-radius: 0 12px 12px 0; margin-bottom: 8px; font-size: 17px; }
+  .prospect .who { font-size: 12px; color: var(--blue); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; }
+  .prospect .line { font-style: italic; }
+  .ask { color: var(--ink); font-size: 15px; font-weight: 600; margin: 16px 2px 18px; }
+
+  .options { display: grid; gap: 12px; }
+  .opt {
+    text-align: left; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink);
+    padding: 16px 18px; border-radius: 12px; cursor: pointer; font: inherit; font-size: 15px;
+    transition: border-color .12s ease, background .12s ease; display: flex; gap: 12px; align-items: flex-start;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--gold); }
+  .opt:disabled { cursor: default; }
+  .opt .key { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); display: grid; place-items: center; font-weight: 700; font-size: 13px; color: var(--muted); }
+  .opt.correct { border-color: var(--green); background: #34d39915; }
+  .opt.correct .key { background: var(--green); color: #052e23; border-color: var(--green); }
+  .opt.wrong { border-color: var(--red); background: #f8717115; }
+  .opt.wrong .key { background: var(--red); color: #3b0a0a; border-color: var(--red); }
+  .opt.dim { opacity: .5; }
+
+  /* short answer */
+  textarea {
+    width: 100%; min-height: 110px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 12px; padding: 14px 16px; font: inherit; font-size: 15px; resize: vertical; line-height: 1.5;
+  }
+  textarea:focus { outline: none; border-color: var(--gold); }
+  .sa-hint { font-size: 13px; color: var(--muted); margin: 8px 2px 0; }
+  .reveal-btn {
+    margin-top: 14px; background: var(--blue); color: #06182e; border: none; padding: 13px 22px;
+    border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 15px; transition: filter .15s ease;
+  }
+  .reveal-btn:hover { filter: brightness(1.08); }
+  .reveal-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .feedback { margin-top: 18px; border-radius: 12px; padding: 18px; border: 1px solid var(--line); background: var(--panel-2); display: none; }
+  .feedback.show { display: block; animation: rise .25s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .feedback .verdict { font-weight: 800; font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .feedback.good .verdict { color: var(--green); }
+  .feedback.bad .verdict { color: var(--red); }
+  .feedback.neutral .verdict { color: var(--blue); }
+  .feedback .why { color: var(--ink); font-size: 15px; }
+  .feedback .coach { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 14px; color: var(--muted); }
+  .feedback .coach b { color: var(--gold); }
+
+  .champ {
+    margin-top: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; font-size: 15px;
+  }
+  .champ .label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--green); font-weight: 700; margin-bottom: 6px; }
+  .principles { margin-top: 14px; }
+  .principles .label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+  .principles ul { list-style: none; display: grid; gap: 6px; }
+  .principles li { font-size: 14px; color: var(--ink); padding-left: 22px; position: relative; }
+  .principles li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 800; }
+
+  .self-score { margin-top: 18px; }
+  .self-score .label { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .score-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .score-btn { flex: 1; min-width: 120px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; font-size: 14px; transition: border-color .12s ease, background .12s ease; }
+  .score-btn[data-s="full"]:hover { border-color: var(--green); background: #34d39915; }
+  .score-btn[data-s="part"]:hover { border-color: var(--amber); background: #fbbf2415; }
+  .score-btn[data-s="miss"]:hover { border-color: var(--red); background: #f8717115; }
+  .score-btn.picked[data-s="full"] { border-color: var(--green); background: #34d39922; }
+  .score-btn.picked[data-s="part"] { border-color: var(--amber); background: #fbbf2422; }
+  .score-btn.picked[data-s="miss"] { border-color: var(--red); background: #f8717122; }
+
+  .next { margin-top: 18px; background: var(--gold); color: #1a1206; border: none; padding: 13px 22px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 15px; float: right; transition: filter .15s ease; }
+  .next:hover { filter: brightness(1.07); }
+  .next:disabled { opacity: .4; cursor: not-allowed; }
+
+  .results { text-align: center; }
+  .results .grade { font-size: 64px; font-weight: 800; margin: 8px 0; }
+  .results .rank { font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+  .results .summary { color: var(--muted); margin-bottom: 24px; }
+  .results .scoreline { display: flex; justify-content: center; gap: 28px; margin-bottom: 26px; flex-wrap: wrap; }
+  .results .scoreline div { font-size: 13px; color: var(--muted); }
+  .results .scoreline b { display: block; font-size: 26px; color: var(--ink); }
+  .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { padding: 13px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 15px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); transition: border-color .15s ease; }
+  .btn:hover { border-color: var(--gold); }
+  .btn.primary { background: var(--gold); color: #1a1206; border-color: var(--gold); }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 28px; }
+  .hidden { display: none !important; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">A Tom Hopkins Training Game</div>
+    <h1>Sales <span class="accent">Master</span></h1>
+    <p class="tagline">Real situations. Hard choices. Learn to sell like a champion.</p>
+  </header>
+
+  <section id="menu" class="panel">
+    <div class="modes" id="modeGrid"></div>
+    <button class="play-all" id="playAll">▶ Play the Full Gauntlet (all modes)</button>
+    <div class="difficulty-note">
+      <b>Expert mode:</b> every answer is something a real rep might try. The wrong ones are plausible — judge on principle, not gut. Don't assume the longest answer is right.
+    </div>
+  </section>
+
+  <section id="game" class="panel hidden">
+    <div class="topbar">
+      <span class="mode-name" id="modeName"></span>
+      <div class="stats">
+        <span>Q <b id="qNum">1</b>/<b id="qTotal">5</b></span>
+        <span class="streak" id="streakBox">🔥 <b id="streak">0</b></span>
+        <span>Score <b id="score">0</b></span>
+      </div>
+    </div>
+    <div class="progress"><div id="progBar"></div></div>
+
+    <div class="tag-row" id="tagRow"></div>
+    <div class="scene" id="scene"></div>
+    <div class="prospect">
+      <div class="who" id="who">Prospect</div>
+      <div class="line" id="prospectLine"></div>
+    </div>
+    <div class="ask" id="ask"></div>
+
+    <!-- MC -->
+    <div class="options" id="options"></div>
+
+    <!-- Short answer -->
+    <div id="saBlock" class="hidden">
+      <textarea id="saInput" placeholder="Type how you'd respond, in your own words..."></textarea>
+      <div class="sa-hint">Write your real response, then reveal the champion's answer and score yourself honestly.</div>
+      <button class="reveal-btn" id="revealBtn">Reveal Champion Answer →</button>
+    </div>
+
+    <div class="feedback" id="feedback">
+      <div class="verdict" id="verdict"></div>
+      <div class="why" id="why"></div>
+      <div id="champWrap" class="hidden">
+        <div class="champ">
+          <div class="label">Champion's Answer</div>
+          <div id="champText"></div>
+        </div>
+        <div class="principles">
+          <div class="label">Did you hit these?</div>
+          <ul id="princList"></ul>
+        </div>
+        <div class="self-score">
+          <div class="label">Score yourself honestly:</div>
+          <div class="score-btns">
+            <button class="score-btn" data-s="full">✓ Nailed it</button>
+            <button class="score-btn" data-s="part">~ Partial</button>
+            <button class="score-btn" data-s="miss">✗ Missed it</button>
+          </div>
+        </div>
+      </div>
+      <div class="coach" id="coach"></div>
+      <button class="next" id="nextBtn">Next →</button>
+      <div style="clear:both"></div>
+    </div>
+  </section>
+
+  <section id="results" class="panel results hidden">
+    <div class="tag-row" style="justify-content:center"><span class="tag">Final Report</span></div>
+    <div class="grade" id="grade">A</div>
+    <div class="rank" id="rank"></div>
+    <div class="summary" id="resultSummary"></div>
+    <div class="scoreline">
+      <div>Score<b id="finalScore">0</b></div>
+      <div>MC Correct<b id="finalCorrect">0</b></div>
+      <div>Best Streak<b id="finalStreak">0</b></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" id="againBtn">Play Again</button>
+      <button class="btn" id="menuBtn">Back to Menu</button>
+    </div>
+  </section>
+
+  <footer>Inspired by the sales principles of Tom Hopkins · Built for Sales Intern Hub</footer>
+</div>
+
+<script>
+/* ============================================================
+   SALES MASTER
+   type: "mc"  -> multiple choice (4 options, length-matched,
+                  brutal distractors, correct sometimes shortest)
+   type: "sa"  -> short answer (type response, reveal champion
+                  answer + principles, self-score)
+   ============================================================ */
+
+const MODES = {
+  objections: {
+    name: "Overcoming Objections", icon: "🛡️",
+    blurb: "Turn the classic stalls — price, time, authority — into yeses.",
+    scenarios: [
+      {
+        type: "mc", label: "Price Objection", who: "Prospect",
+        scene: "Strong demo. They were nodding the whole way through. You name the price and the room cools.",
+        line: "Honestly, it's just too expensive for us right now.",
+        ask: "What's your move?",
+        options: [
+          // longer but wrong — feels thorough, actually defensive
+          { t: "Walk them back through the ROI math line by line, showing how the product pays for itself within the first few months of use.", correct: false,
+            fb: "ROI math can be powerful — but firing it off before you know what 'expensive' means is a guess. They might be comparing you to a cheaper competitor, not doubting payback. You're answering a question they didn't ask." },
+          // SHORT and correct
+          { t: "“Too expensive compared to what?”", correct: true,
+            fb: "Short, surgical, correct. 'Expensive' is meaningless until you know the reference point — a rival quote, their budget ceiling, or plain sticker shock. Each needs a different answer. Isolate it first." },
+          { t: "Acknowledge the concern, then offer to break the annual cost down into a smaller-sounding monthly figure to soften the number.", correct: false,
+            fb: "Reframing the number is a tactic for later — but it skips diagnosis. If their real issue is a competitor's price or doubt about value, making the figure 'sound smaller' dodges the actual objection." },
+          { t: "Hold firm on price and explain that the quality and support justify every dollar of the premium they'd be paying.", correct: false,
+            fb: "You went defensive and started justifying before you understood the objection. They didn't say it lacked value — they said it costs too much. Find out 'compared to what' before you defend anything." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Never answer an objection you haven't fully understood. 'Compared to what?' converts a wall into a doorway."
+      },
+      {
+        type: "sa", label: "The Stall", who: "Prospect",
+        scene: "Good meeting. They're interested but not committing. Then the most common line in all of selling:",
+        line: "I need to think it over.",
+        ask: "Type exactly what you'd say next.",
+        champion: "“I understand completely — it's an important decision. Usually when someone says they want to think it over, there's one specific thing on their mind. Is it the investment, the timing, or something else I haven't fully covered?”",
+        principles: [
+          "Acknowledged it warmly — didn't argue or pressure",
+          "Named that 'think it over' usually hides a specific concern",
+          "Offered concrete options (price / timing / other) to make it easy to answer",
+          "Aimed to surface the REAL objection, not accept the stall"
+        ],
+        fb: "The stall is rarely about thinking — it's an unspoken concern. The champion honors it, then gently flushes out what's actually behind it so they can sell to the real issue.",
+        coach: "<b>Hopkins' rule:</b> 'I'll think it over' is a smokescreen. Your job is to lovingly find out what's behind it — never to accept it at face value."
+      },
+      {
+        type: "mc", label: "Authority Objection", who: "Prospect",
+        scene: "You're deep in the close. Then it surfaces — late, where it does the most damage.",
+        line: "I'll have to run this by my business partner before I can decide anything.",
+        ask: "Pick the strongest response.",
+        options: [
+          { t: "“Of course — when do you think you'll get a chance to speak with them about it?”", correct: false,
+            fb: "Polite, but you just handed your sale to someone who never saw the pitch. They'll relay a watered-down version and the partner, hearing it secondhand, defaults to no." },
+          { t: "“What do you think your partner will want to know — and would it make sense to get them on a quick call together so I can answer that directly?”", correct: true,
+            fb: "You respect the partner's role AND keep yourself in the room. Getting the real decider in front of you beats betting your deal on your prospect's ability to sell it for you." },
+          { t: "“Sure. Why don't I put together a one-page summary you can forward along to them?”", correct: false,
+            fb: "A leave-behind is fine support, but as your main play it still relies on a non-seller to carry the sale. A document doesn't handle the partner's objections — you do." },
+          { t: "“Totally understand. I'll follow up in a few days to see what they said.”", correct: false,
+            fb: "You've gone fully passive, waiting on a conversation you're not part of and can't influence. By follow-up, the deal has cooled and the partner's 'no' is already set." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Qualify for decision-making power early. When you miss it, pull the real decider into the room — don't sell through a messenger."
+      },
+      {
+        type: "mc", label: "Loyalty to Competitor", who: "Prospect",
+        scene: "They already have a vendor. The trap here is obvious — and most reps fall in it.",
+        line: "We're already working with someone else, and honestly we're pretty happy with them.",
+        ask: "What's the right play?",
+        options: [
+          { t: "“They're a fine company. If there were one thing you could improve about how it works today, what would it be?”", correct: true,
+            fb: "You validate their choice (lowering defenses), then open a small gap without ever attacking the competitor. Nobody is 100% happy — that one improvement is your entry point." },
+          { t: "Ask a series of pointed questions about gaps you know the competitor has, steering them toward realizing what they're missing out on.", correct: false,
+            fb: "Leading questions designed to trap them feel like a setup — and they sense it. It's a thinly veiled attack on their judgment for choosing the incumbent. Open a gap, don't engineer a gotcha." },
+          { t: "Offer to run a free side-by-side comparison so they can objectively see exactly where you outperform their current provider.", correct: false,
+            fb: "Jumping to a bake-off before they've admitted any dissatisfaction is premature — and frames it as your-product-vs-theirs, which makes them defend their choice harder. Find the gap first." },
+          { t: "“That's great. What would it take for a company like ours to earn a shot at your business down the road?”", correct: false,
+            fb: "Not terrible — but it punts to 'someday' and accepts the brush-off. You haven't surfaced any dissatisfaction to act on now, so 'down the road' usually means never." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Never criticize a competitor. Praise the prospect's choice, then find the one thing they wish were better."
+      },
+      {
+        type: "mc", label: "Timing Objection", who: "Prospect",
+        scene: "Everything's gone well, but they're reaching for the calendar to push you into the fog.",
+        line: "This isn't a good time for us — can we maybe revisit it next quarter?",
+        ask: "Choose the best response.",
+        options: [
+          { t: "“Makes sense. I'll set a reminder and reach back out at the start of next quarter to pick this up.”", correct: false,
+            fb: "'Next quarter' is where deals go to die. You accepted a vague delay without learning why now is bad — so you have no idea if next quarter will be any different. It won't." },
+          { t: "“Is it the cost, the setup effort, or something else happening on your end that makes now feel wrong?”", correct: true,
+            fb: "You break the fog of 'timing' into concrete causes — each with a different fix. Maybe setup's faster than they fear, or billing can defer. You can't solve 'timing,' but you can solve the specific thing behind it." },
+          { t: "Mention that you have some pricing flexibility this quarter that likely won't be available later, to give them a reason to act sooner.", correct: false,
+            fb: "Leading with a deadline-discount before you understand the objection trains them to wait for deals and can read as pressure. Diagnose the real reason before reaching for incentives." },
+          { t: "Agree to revisit later, but ask to keep them on your newsletter so you stay top of mind until the timing improves for them.", correct: false,
+            fb: "A newsletter is a soft burial. The objection stays unexamined and your 'active deal' quietly becomes a passive contact who forgets you existed." }
+        ],
+        coach: "<b>Hopkins' rule:</b> 'Bad timing' is almost always a different objection in disguise. Diagnose before you accept the delay."
+      }
+    ]
+  },
+
+  qualifying: {
+    name: "Qualifying the Prospect", icon: "🔍",
+    blurb: "Spend your time on real buyers. Ask the questions that reveal them.",
+    scenarios: [
+      {
+        type: "mc", label: "First Contact", who: "New Lead",
+        scene: "An inbound lead. Friendly, a little vague. Your clock is ticking and you want to use it well.",
+        line: "Yeah, I saw your ad and figured I'd reach out to learn a bit more about what you do.",
+        ask: "Where do you start?",
+        options: [
+          { t: "“What made you start looking now?”", correct: true,
+            fb: "Short and devastatingly effective. The trigger event reveals their pain, their urgency, and how to frame everything next — all in one question. Qualifying starts with 'why now.'" },
+          { t: "Give a tight two-minute overview of your product and the main problems it solves, then ask if any of it resonates with them.", correct: false,
+            fb: "Even a 'tight' pitch is selling blind — you don't yet know their situation, so you're guessing at what matters. You'll spend your best minutes on the wrong things." },
+          { t: "Ask a structured series of qualifying questions about their company size, industry, and current tools to map their profile.", correct: false,
+            fb: "Firing a checklist at a brand-new lead feels like an intake form, not a conversation. It gathers facts but misses the one thing that actually predicts a sale: why they're looking right now." },
+          { t: "Ask what specifically caught their eye in the ad, then build your pitch around the feature that drew them in.", correct: false,
+            fb: "Decent instinct, but an ad's hook is shallow signal. What drew a click isn't the same as what's driving a purchase. Get the underlying trigger, not the surface curiosity." }
+        ],
+        coach: "<b>Hopkins' rule:</b> 'What made you start looking now' is the most valuable thing you can learn first — it reveals pain and urgency at once."
+      },
+      {
+        type: "sa", label: "Budget Discovery", who: "Prospect",
+        scene: "Good rapport, real interest. You need to know if they can actually afford you — without making it weird or scaring them off.",
+        line: "I'd honestly rather not say what we're looking to spend yet.",
+        ask: "Type how you'd handle this.",
+        champion: "“Totally fair — no pressure to put a number on it. To make sure I point you toward the right option, most clients solving a challenge like yours end up investing somewhere between $X and $Y. Does that range feel workable, or does it sound off?”",
+        principles: [
+          "Respected their reluctance — removed the pressure",
+          "Gave a RANGE instead of demanding an exact number",
+          "Tied the range to their challenge, not a random price list",
+          "Let their reaction to the range do the qualifying"
+        ],
+        fb: "Demanding a number creates resistance; anchoring low caps your own deal. A range feels collaborative, and their reaction ('that's fine' vs 'way too high') qualifies budget without forcing them to reveal it cold.",
+        coach: "<b>Hopkins' rule:</b> When they won't name a number, offer a range. Their reaction to the range qualifies the budget for you."
+      },
+      {
+        type: "mc", label: "Need vs Want", who: "Prospect",
+        scene: "They're curious but lukewarm. You can't tell yet if there's real pain or just window-shopping.",
+        line: "It'd be nice to have, sure, but we're getting by fine without it for now.",
+        ask: "How do you respond?",
+        options: [
+          { t: "Paint a vivid picture of where their business could be a year from now if they solved this problem today instead of waiting.", correct: false,
+            fb: "Future-pacing the upside is a real technique — but it lands flat on someone who doesn't yet feel a problem. You have to make the present pain concrete before the future vision means anything." },
+          { t: "“What's 'getting by' actually costing you each week — in hours or dollars?”", correct: true,
+            fb: "You quantify the pain of the status quo. People tolerate problems until the ongoing cost is made concrete. Turning a vague 'we're fine' into '6 hours a week' is what creates the need." },
+          { t: "Share a quick story about a similar client who thought they were fine, then discovered real savings after switching to you.", correct: false,
+            fb: "A case story is good support material, but used here it's you talking instead of them. They can dismiss someone else's story; they can't dismiss their own number. Make them do the math." },
+          { t: "Acknowledge they're managing, and ask what would have to change in their business for this to become a priority.", correct: false,
+            fb: "Close, but it outsources the work to them and invites a vague 'I dunno.' You want to actively surface the hidden cost they've stopped noticing — not ask them to imagine a future trigger." }
+        ],
+        coach: "<b>Hopkins' rule:</b> No pain, no sale. If they're 'getting by,' quantify what getting by is quietly costing them."
+      },
+      {
+        type: "mc", label: "Decision Process", who: "Prospect",
+        scene: "They're genuinely warm — leaning in, asking about next steps. Easy to get excited and forget to qualify.",
+        line: "This sounds really promising! So what are the next steps on your end?",
+        ask: "Pick the smartest move.",
+        options: [
+          { t: "Match their energy and propose sending the agreement over today so you can lock in the momentum while they're excited.", correct: false,
+            fb: "Riding the excitement to paper feels decisive but it's reckless — you don't know who else signs off or how their procurement works. Deals rushed to contract stall in steps you never saw coming." },
+          { t: "“Walk me through how a decision like this usually gets made on your side — and who else tends to weigh in?”", correct: true,
+            fb: "Enthusiasm makes reps skip qualifying the process. Mapping who decides, how, and by when prevents the deal from dying in a hidden approval step. Excitement is not the same as authority." },
+          { t: "Outline your standard onboarding timeline and ask which start date works best for getting them up and running.", correct: false,
+            fb: "Talking start dates assumes the decision is made and skips past the question of how it actually gets made. You're scheduling a sale you haven't qualified." },
+          { t: "Ask whether they have everything they need from you, and offer to answer any final questions before moving ahead.", correct: false,
+            fb: "Pleasant but passive — it treats their enthusiasm as the finish line. You learn nothing about the real decision process and stay blind to the other stakeholders." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Enthusiasm isn't a yes. Always qualify the decision process — who, how, and by when — even when they're excited."
+      },
+      {
+        type: "sa", label: "Tire-Kicker Test", who: "Prospect",
+        scene: "They reached out, but everything they say is noncommittal. You can't tell if they're a serious comparison shopper or a polite time-sink.",
+        line: "I'm really just gathering information for now, comparing a bunch of different options.",
+        ask: "Type what you'd say to gauge if they're real.",
+        champion: "“Smart to compare — this should be a careful decision. Just so I know how to help: if you found the option that was clearly the right fit, what's your timeline for actually making a decision?”",
+        principles: [
+          "Validated comparing (didn't get defensive or pushy)",
+          "Used timeline as the qualifier — the cheapest, sharpest one there is",
+          "Framed it as 'if you found the right fit' so it's low-pressure",
+          "Set up matching your effort to their seriousness"
+        ],
+        fb: "Timeline instantly separates buyers from browsers. 'In the next two weeks' is a buyer; 'no timeline, just looking' tells you to nurture lightly instead of pouring hours into a custom proposal.",
+        coach: "<b>Hopkins' rule:</b> Match your effort to their timeline. 'When would you decide?' separates buyers from browsers in one question."
+      }
+    ]
+  },
+
+  closing: {
+    name: "The Close", icon: "🤝",
+    blurb: "Read the buying signals. Pick the right close at the right moment.",
+    scenarios: [
+      {
+        type: "mc", label: "Buying Signal", who: "Prospect",
+        scene: "Mid-conversation, unprompted, they lean in and ask:",
+        line: "So if we did decide to go ahead... how soon could we actually get started?",
+        ask: "This is a buying signal. What do you do?",
+        options: [
+          { t: "Give them the timeline, then reassure them there's no rush and they should take whatever time they need to be sure.", correct: false,
+            fb: "They signaled readiness and you talked them back out of it. 'No rush' when someone is closing themselves snuffs the momentum you didn't have to do anything to earn." },
+          { t: "“We could have you live by Friday. Want me to start the paperwork so we hit that date?”", correct: true,
+            fb: "You answer the signal and assume the sale forward. They asked about starting, so you move toward starting — the assumptive close. Hesitating here is how warm deals cool." },
+          { t: "Answer the timing question, then take the opportunity to highlight a couple more features they'll get value from once they're set up.", correct: false,
+            fb: "Classic overselling. They're ready — and you reopened the pitch. Every extra feature is another thing for them to question. When you hear the close, stop selling." },
+          { t: "Tell them the timeline depends on a few details, and suggest scheduling a follow-up call to scope out their specific setup.", correct: false,
+            fb: "You met a buying signal with a speed bump. Booking another call to 'scope it out' when they're ready now inserts delay exactly where you want momentum." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Questions about delivery, timing, or logistics are buying signals. Answer them, then assume the close."
+      },
+      {
+        type: "mc", label: "The Alternate Choice", who: "Prospect",
+        scene: "They've warmed all the way up. The decision is right there, ripe.",
+        line: "Okay, yeah — I think this could really work for us.",
+        ask: "How do you bring it home?",
+        options: [
+          { t: "“So, would you like to go ahead and move forward with it?”", correct: false,
+            fb: "A yes/no question hands them the easy exit. 'Let me think about it' is right there waiting. When they're this warm, make the question one where every answer moves forward." },
+          { t: "“Perfect — would you prefer the monthly plan, or the annual one with the discount?”", correct: true,
+            fb: "The alternate-choice close. Both answers are a yes — you've shifted the question from 'whether' to 'which.' It feels like a small, comfortable decision instead of a big scary commitment." },
+          { t: "Express genuine enthusiasm, then ask if there's anything at all still holding them back before you proceed.", correct: false,
+            fb: "Asking 'anything holding you back?' on a warm prospect invites them to invent a doubt that wasn't there. You went looking for an objection at the exact moment you should be closing." },
+          { t: "Summarize the key benefits one more time to reinforce the value, then ask if they're ready to get started.", correct: false,
+            fb: "Re-selling someone who already said yes risks reopening settled questions, and it ends on a yes/no anyway. They're past the benefits — give them an easy forward step." }
+        ],
+        coach: "<b>Hopkins' rule:</b> The alternate-choice close offers two yeses. 'A or B?' beats 'yes or no?' every time."
+      },
+      {
+        type: "mc", label: "The Silent Close", who: "You",
+        scene: "You've laid out the proposal and asked for the order:\n\n“...and that brings the total to $4,800. Shall we get started?”\n\nThe prospect goes quiet, clearly thinking it over.",
+        line: "( silence )",
+        ask: "The pause stretches on. What do you do?",
+        options: [
+          { t: "Say nothing. Let the silence sit and wait for them to speak first.", correct: true,
+            fb: "The most powerful close is silence. After you ask for the order, the next person to speak loses. That pause is them deciding — let its pressure do the work. Filling it rescues them from the yes." },
+          { t: "Gently fill the gap by reassuring them it's a big decision and you completely understand if they need a moment.", correct: false,
+            fb: "Well-meaning, but you just let them off the hook and reset the close. The silence was working FOR you — narrating it hands them an easy 'yeah, let me think.'" },
+          { t: "Offer to walk through the numbers one more time in case any part of the pricing breakdown is giving them pause.", correct: false,
+            fb: "Re-opening the price during the decisive pause invites scrutiny and often a discount request. You interrupted them in the middle of talking themselves into yes." },
+          { t: "Mention you could potentially find a little flexibility on the price if that would help them feel comfortable moving forward.", correct: false,
+            fb: "You negotiated against yourself in dead air — discounting for no reason and signaling your price was soft. That silence was a yes forming, and you undercut it." }
+        ],
+        coach: "<b>Hopkins' rule:</b> When you ask the closing question, shut up. Whoever speaks first, loses. Silence is a closing tool."
+      },
+      {
+        type: "sa", label: "The Minor-Point Close", who: "Prospect",
+        scene: "They're basically sold. One small thing is keeping them from saying yes.",
+        line: "I'm pretty much there — I'm just not 100% sure about the start timing.",
+        ask: "Type your closing response.",
+        champion: "“That's the easy part to solve. If we could lock in a start date that fits your schedule perfectly — say, the first of next month — would you be ready to move forward?”",
+        principles: [
+          "Did NOT re-pitch the whole thing — they're already sold",
+          "Shrunk the decision down to the one remaining point (timing)",
+          "Proposed a concrete option to make it easy to say yes",
+          "Tied resolving the small point directly to closing the sale"
+        ],
+        fb: "When only a minor point remains, you close on that point. Solve the small thing and you've solved the whole sale — turning a big 'yes/no' into a tiny logistics question.",
+        coach: "<b>Hopkins' rule:</b> When only a minor point remains, close on that point. Solve the small thing and the whole sale follows."
+      },
+      {
+        type: "mc", label: "Handling 'No'", who: "Prospect",
+        scene: "Late in the game, after real engagement, they shake their head.",
+        line: "You know what — I don't think we're going to move forward on this.",
+        ask: "A genuine no. Your move matters more than you'd think.",
+        options: [
+          { t: "“I appreciate you being straight with me. Just so I can learn — what tipped it toward no?”", correct: true,
+            fb: "Gracious and useful at once. You keep the relationship warm for the future and surface the real reason — often a fixable objection you can still address, or a lesson for the next sale." },
+          { t: "Make one final case, reiterating the strongest benefit and the cost of not solving the problem, in case they reconsider.", correct: false,
+            fb: "One more pitch after a clear no reads as not listening, and pressure at the finish sours the relationship. You can sometimes reopen a no — but by asking why, not by re-selling over it." },
+          { t: "Graciously accept it and ask if you can check back in a few months in case their situation changes down the line.", correct: false,
+            fb: "Polite and not wrong — but it skips the most valuable step. Without learning WHY they passed, you can't address a fixable reason now or improve next time. Ask why before you schedule the future." },
+          { t: "Respect their decision, thank them for their time, and ask if they know anyone else who might benefit from what you offer.", correct: false,
+            fb: "Jumping straight to a referral ask the instant they say no is tone-deaf — you haven't even learned why they declined. Understand the no first; the relationship (and any referral) depends on it." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Every no is a not-yet if you exit with grace. Ask why, stay warm, and keep the door open."
+      }
+    ]
+  },
+
+  coldcall: {
+    name: "Cold Call Opener", icon: "📞",
+    blurb: "The first 15 seconds. Earn the next 15 — or get hung up on.",
+    scenarios: [
+      {
+        type: "mc", label: "The Opening Line", who: "Prospect",
+        scene: "You dialed. Against the odds, a live human picks up.",
+        line: "Hello? ...Who is this?",
+        ask: "You have about ten seconds. What comes out of your mouth?",
+        options: [
+          { t: "“Hi, this is Sam from Acme — did I catch you at an okay time to talk for a minute?”", correct: false,
+            fb: "Asking permission for time before giving a reason hands them the instant 'no, I'm busy.' You led with the ask instead of the value. Give them a reason to stay first." },
+          { t: "“Hi, Sam with Acme — I'll be quick: we help teams cut onboarding time in half, and I had one question. Worth 30 seconds?”", correct: true,
+            fb: "Name, company, a clear value reason, brevity, and a tiny ask. You respect their time, lead with relevance, and request a small commitment instead of an open-ended block. Earned, not begged." },
+          { t: "“Hi! Before I explain why I'm calling — how's your day going so far?”", correct: false,
+            fb: "The universal telemarketer tell. Forced warmth with a stranger triggers instant defenses; they know precisely what's coming and brace for it. Skip the fake rapport." },
+          { t: "“Hi, this is Sam — I'm reaching out to companies in your industry about an opportunity I think you'll want to hear about.”", correct: false,
+            fb: "Vague hype ('an opportunity you'll want to hear') with no concrete value sounds exactly like every spam call. You gave them nothing specific to justify the next ten seconds." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Open with who you are, a relevant reason, and a small ask. Earn the next 30 seconds — don't beg for an open-ended block."
+      },
+      {
+        type: "mc", label: "The Brush-Off", who: "Prospect",
+        scene: "You got your opener out. Reflexively, before really hearing you, they reach for the exit.",
+        line: "Look, I'm really busy right now.",
+        ask: "Half of all calls hit this wall. What now?",
+        options: [
+          { t: "“I hear you — that's exactly why I called instead of emailing. Give me 20 seconds; if it's not relevant, I'll let you go.”", correct: true,
+            fb: "You acknowledge their time, give them an easy out, and ask for a tiny specific window. The 'if not, I'll let you go' lowers the stakes and disarms the reflex. Empathy plus a micro-ask." },
+          { t: "Apologize for the bad timing and ask what day and time would work better for a quick scheduled call later this week.", correct: false,
+            fb: "'Call me later' is usually a polite 'call me never.' You can often earn the moment now with a respectful micro-ask. Rescheduling cedes the one chance you fought to get." },
+          { t: "Quickly assure them it'll only take a moment, then launch straight into your value pitch before they can object again.", correct: false,
+            fb: "Steamrolling a stated boundary confirms their fear that you don't respect their time. The pitch lands on a closed mind and earns a hang-up." },
+          { t: "Acknowledge they're busy and offer to send a short email instead so they can look at it whenever they have a free minute.", correct: false,
+            fb: "Retreating to email at the first resistance forfeits the live conversation — your biggest advantage on a call. That email joins hundreds of unread others. Try to earn the 20 seconds first." }
+        ],
+        coach: "<b>Hopkins' rule:</b> Meet the brush-off with empathy plus a tiny, low-risk ask. Give them an exit and they'll often give you the moment."
+      },
+      {
+        type: "mc", label: "The Gatekeeper", who: "Receptionist",
+        scene: "You called the main line. A friendly but firm voice stands between you and the decision-maker.",
+        line: "May I ask what this is regarding?",
+        ask: "How do you handle the gatekeeper?",
+        options: [
+          { t: "“Of course — I'm hoping to speak with Jordan about reducing their team's onboarding time. Are they the right person, or is it someone else?”", correct: true,
+            fb: "Respectful, honest, and you treat the gatekeeper as an ally — even asking their guidance on who's right. Gatekeepers open doors for people who respect them and trust what they say." },
+          { t: "Warmly explain you have some valuable information for Jordan specifically and ask if they could kindly put you through.", correct: false,
+            fb: "'Valuable information' with no specifics is exactly what every salesperson says — the gatekeeper has heard it a thousand times. Vague value reads as a screen-me-out signal." },
+          { t: "Mention that Jordan will know what it's about and that it's a somewhat time-sensitive matter you'd like to discuss directly.", correct: false,
+            fb: "Implying a prior relationship that doesn't exist is a half-truth that unravels fast — and gatekeepers always find out. You start the real relationship having been caught bending the truth." },
+          { t: "Politely ask for Jordan by name and say you'll only need a brief moment of their time to introduce yourself.", correct: false,
+            fb: "Dodging the 'what's this regarding' question makes the gatekeeper's job harder and puts them on guard. Answer honestly and enlist them — they have more power over your access than anyone." }
+        ],
+        coach: "<b>Hopkins' rule:</b> The gatekeeper is an ally, not an obstacle. Honesty and respect get you further than tricks ever will."
+      },
+      {
+        type: "sa", label: "Voicemail", who: "Voicemail",
+        scene: "It rings out. The beep is coming. Most messages get deleted in the first five seconds — make this one earn a callback.",
+        line: "“You've reached Jordan. Leave a message after the tone.” *BEEP*",
+        ask: "Type the exact voicemail you'd leave.",
+        champion: "“Hi Jordan, this is Sam at 415-555-0182. I had a quick idea about cutting your team's onboarding time — worth a five-minute chat. Again, that's Sam, 415-555-0182. Thanks, talk soon.”",
+        principles: [
+          "Kept it under ~20 seconds",
+          "Led with a specific value hook (cutting onboarding time)",
+          "Gave a concrete, low-commitment reason to call back (5 min)",
+          "Stated the phone number TWICE so they don't replay it"
+        ],
+        fb: "Long voicemails get deleted; vague ones ('it's important, call me') get ignored. Short, one value hook, number twice. A crisp voicemail makes your next touch no longer truly cold.",
+        coach: "<b>Hopkins' rule:</b> Voicemail = under 20 seconds, one value hook, number stated twice. Make it effortless to call you back."
+      },
+      {
+        type: "mc", label: "The Hook Question", who: "Prospect",
+        scene: "You earned a few seconds. They're listening now — and what you do with this moment decides everything.",
+        line: "Okay... you've got my attention. What's this about?",
+        ask: "Don't waste it. What do you say?",
+        options: [
+          { t: "“How's your team handling onboarding for new hires right now? I ask because that's exactly where we tend to save people a lot of time.”", correct: true,
+            fb: "You flip attention into a conversation with a question about THEIR world. Now they're talking about their pain instead of listening to your pitch — and that's where real selling begins." },
+          { t: "Give a crisp 30-second summary of what you do, the key benefit, and the kind of results your typical client sees.", correct: false,
+            fb: "You finally have attention and spend it talking AT them. Even a crisp pitch is forgettable; their own problem is not. Ask about their world before you describe yours." },
+          { t: "Briefly share an impressive result you got for a similar company to immediately establish credibility and grab their interest.", correct: false,
+            fb: "A proof point can be powerful — but leading with someone else's result keeps the spotlight on you. They care about their situation first. Earn relevance with a question, then bring the proof." },
+          { t: "Ask if they'd be open to a short demo later this week where you can show them exactly how it all works.", correct: false,
+            fb: "Jumping to a calendar ask the second they warm up is too much, too fast. You haven't created any pull yet. Open their world with a question before you reach for the booking." }
+        ],
+        coach: "<b>Hopkins' rule:</b> The moment you have attention, ask about their world. A question about their pain beats any pitch about your product."
+      }
+    ]
+  }
+};
+
+/* ---------------- Engine ---------------- */
+const MODE_ORDER = ["objections", "qualifying", "closing", "coldcall"];
+let queue = [], qi = 0;
+let score = 0, mcCorrect = 0, mcTotal = 0, streak = 0, bestStreak = 0;
+let answered = false, currentModeLabel = "", saScored = false;
+
+const $ = id => document.getElementById(id);
+
+function buildMenu() {
+  const grid = $("modeGrid");
+  grid.innerHTML = "";
+  MODE_ORDER.forEach(key => {
+    const m = MODES[key];
+    const card = document.createElement("button");
+    card.className = "mode-card";
+    card.innerHTML = `<span class="icon">${m.icon}</span><h3>${m.name}</h3><p>${m.blurb}</p>`;
+    card.onclick = () => startMode([key]);
+    grid.appendChild(card);
+  });
+}
+
+function startMode(modeKeys) {
+  queue = [];
+  modeKeys.forEach(key => MODES[key].scenarios.forEach(s => queue.push({ modeKey: key, scenario: s })));
+  qi = 0; score = 0; mcCorrect = 0; mcTotal = 0; streak = 0; bestStreak = 0;
+  currentModeLabel = modeKeys.length > 1 ? "The Full Gauntlet" : MODES[modeKeys[0]].name;
+  show("game");
+  renderQuestion();
+}
+
+function show(which) {
+  ["menu", "game", "results"].forEach(s => $(s).classList.toggle("hidden", s !== which));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderQuestion() {
+  answered = false; saScored = false;
+  const { modeKey, scenario } = queue[qi];
+  $("modeName").textContent = currentModeLabel + " · " + MODES[modeKey].name;
+  $("qNum").textContent = qi + 1;
+  $("qTotal").textContent = queue.length;
+  $("score").textContent = score;
+  $("streak").textContent = streak;
+  $("streakBox").classList.toggle("hot", streak >= 3);
+  $("progBar").style.width = (qi / queue.length * 100) + "%";
+
+  // tags
+  const tr = $("tagRow");
+  tr.innerHTML = `<span class="tag">${scenario.label}</span>` +
+    (scenario.type === "sa"
+      ? `<span class="tag sa">✍ Short Answer</span>`
+      : `<span class="tag mc">◧ Multiple Choice</span>`);
+
+  $("scene").textContent = scenario.scene || "";
+  $("who").textContent = scenario.who;
+  $("prospectLine").textContent = (scenario.who === "You" || scenario.line.startsWith("(") || scenario.line.includes("BEEP"))
+    ? scenario.line : `“${scenario.line}”`;
+  $("ask").textContent = scenario.ask;
+
+  $("feedback").className = "feedback";
+  $("champWrap").classList.add("hidden");
+
+  if (scenario.type === "sa") {
+    $("options").classList.add("hidden");
+    $("options").innerHTML = "";
+    $("saBlock").classList.remove("hidden");
+    $("saInput").value = "";
+    $("saInput").disabled = false;
+    $("revealBtn").disabled = false;
+    $("nextBtn").disabled = true;            // must self-score first
+    document.querySelectorAll(".score-btn").forEach(b => b.classList.remove("picked"));
+  } else {
+    $("saBlock").classList.add("hidden");
+    $("options").classList.remove("hidden");
+    $("nextBtn").disabled = false;
+    renderMC(scenario);
+  }
+}
+
+function renderMC(scenario) {
+  const opts = scenario.options.map((o, i) => ({ ...o, origin: i }));
+  shuffle(opts);
+  const box = $("options");
+  box.innerHTML = "";
+  const keys = ["A", "B", "C", "D"];
+  opts.forEach((o, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.innerHTML = `<span class="key">${keys[idx]}</span><span class="opt-text">${o.t}</span>`;
+    btn.onclick = () => chooseMC(btn, o, box);
+    box.appendChild(btn);
+  });
+}
+
+function chooseMC(btn, opt, box) {
+  if (answered) return;
+  answered = true;
+  mcTotal++;
+  const fb = $("feedback");
+  const allBtns = [...box.querySelectorAll(".opt")];
+  allBtns.forEach(b => b.disabled = true);
+
+  if (opt.correct) {
+    btn.classList.add("correct");
+    score += 100 + streak * 25;
+    streak++; mcCorrect++;
+    bestStreak = Math.max(bestStreak, streak);
+    fb.classList.add("good");
+    $("verdict").innerHTML = `✓ Right move${streak >= 3 ? " — you're on fire! 🔥" : "!"}`;
+  } else {
+    btn.classList.add("wrong");
+    streak = 0;
+    fb.classList.add("bad");
+    $("verdict").innerHTML = `✗ Not the play`;
+    const correctText = queue[qi].scenario.options.find(o => o.correct).t;
+    allBtns.forEach(b => {
+      const txt = b.querySelector(".opt-text").textContent;
+      if (txt === correctText) b.classList.add("correct");
+      else if (b !== btn) b.classList.add("dim");
+    });
+  }
+  $("why").textContent = opt.fb;
+  $("coach").innerHTML = queue[qi].scenario.coach;
+  $("score").textContent = score;
+  $("streak").textContent = streak;
+  $("streakBox").classList.toggle("hot", streak >= 3);
+  $("progBar").style.width = ((qi + 1) / queue.length * 100) + "%";
+  $("nextBtn").textContent = (qi + 1 >= queue.length) ? "See Results →" : "Next →";
+  fb.classList.add("show");
+}
+
+$("revealBtn").onclick = () => {
+  const scenario = queue[qi].scenario;
+  $("saInput").disabled = true;
+  $("revealBtn").disabled = true;
+  const fb = $("feedback");
+  fb.classList.add("neutral", "show");
+  $("verdict").innerHTML = `✍ Now compare with a champion`;
+  $("why").textContent = scenario.fb;
+  $("champText").textContent = scenario.champion;
+  const list = $("princList");
+  list.innerHTML = "";
+  scenario.principles.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = p;
+    list.appendChild(li);
+  });
+  $("coach").innerHTML = scenario.coach;
+  $("champWrap").classList.remove("hidden");
+  $("nextBtn").textContent = (qi + 1 >= queue.length) ? "See Results →" : "Next →";
+};
+
+document.querySelectorAll(".score-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".score-btn").forEach(b => b.classList.remove("picked"));
+    btn.classList.add("picked");
+    const s = btn.dataset.s;
+    // first scoring only counts toward score
+    if (!saScored) {
+      saScored = true;
+      if (s === "full") { score += 100 + streak * 25; streak++; bestStreak = Math.max(bestStreak, streak); }
+      else if (s === "part") { score += 50; streak = 0; }
+      else { streak = 0; }
+      $("score").textContent = score;
+      $("streak").textContent = streak;
+      $("streakBox").classList.toggle("hot", streak >= 3);
+    }
+    $("nextBtn").disabled = false;
+  };
+});
+
+$("nextBtn").onclick = () => {
+  qi++;
+  if (qi >= queue.length) showResults();
+  else renderQuestion();
+};
+
+function showResults() {
+  show("results");
+  const total = queue.length;
+  const pct = mcTotal ? mcCorrect / mcTotal : 0;
+  let grade, rank, summary;
+  if (pct === 1)      { grade = "A+"; rank = "Sales Champion"; summary = "Flawless on the judgment calls. Tom Hopkins would shake your hand."; }
+  else if (pct >= .8) { grade = "A";  rank = "Closer";         summary = "Sharp instincts — you read people and resist the easy-but-wrong move."; }
+  else if (pct >= .6) { grade = "B";  rank = "Rising Rep";     summary = "Solid foundation. A few subtle calls to tighten up."; }
+  else if (pct >= .4) { grade = "C";  rank = "In Training";    summary = "The basics are there. Study the coaching notes — the wrong answers were tempting for a reason."; }
+  else                { grade = "D";  rank = "Rookie";         summary = "Tough round. These distractors are designed to fool you — replay and learn the principles."; }
+
+  $("grade").textContent = grade;
+  $("rank").textContent = rank;
+  $("resultSummary").textContent = summary;
+  $("finalScore").textContent = score;
+  $("finalCorrect").textContent = `${mcCorrect}/${mcTotal}`;
+  $("finalStreak").textContent = bestStreak;
+}
+
+$("againBtn").onclick = () => {
+  const keys = [...new Set(queue.map(q => q.modeKey))];
+  startMode(keys);
+};
+$("menuBtn").onclick = () => show("menu");
+$("playAll").onclick = () => startMode(MODE_ORDER);
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+buildMenu();
+</script>
