@@ -269,15 +269,13 @@ const MODES = {
         line: "Honestly, it's just too expensive for us right now.",
         ask: "What's your move?",
         options: [
-          // longer but wrong — feels thorough, actually defensive
-          { t: "Walk them back through the ROI math line by line, showing how the product pays for itself within the first few months of use.", correct: false,
+          { t: "“Let me walk you through the ROI — line by line, you'll see this pays for itself within the first few months.”", correct: false,
             fb: "ROI math can be powerful — but firing it off before you know what 'expensive' means is a guess. They might be comparing you to a cheaper competitor, not doubting payback. You're answering a question they didn't ask." },
-          // SHORT and correct
           { t: "“Too expensive compared to what?”", correct: true,
             fb: "Short, surgical, correct. 'Expensive' is meaningless until you know the reference point — a rival quote, their budget ceiling, or plain sticker shock. Each needs a different answer. Isolate it first." },
-          { t: "Acknowledge the concern, then offer to break the annual cost down into a smaller-sounding monthly figure to soften the number.", correct: false,
+          { t: "“I hear you — but if you look at it monthly instead of all at once, it's really only a small amount per day.”", correct: false,
             fb: "Reframing the number is a tactic for later — but it skips diagnosis. If their real issue is a competitor's price or doubt about value, making the figure 'sound smaller' dodges the actual objection." },
-          { t: "Hold firm on price and explain that the quality and support justify every dollar of the premium they'd be paying.", correct: false,
+          { t: "“It is a premium — but honestly, the quality and the support behind it justify every dollar.”", correct: false,
             fb: "You went defensive and started justifying before you understood the objection. They didn't say it lacked value — they said it costs too much. Find out 'compared to what' before you defend anything." }
         ],
         coach: "<b>Hopkins' rule:</b> Never answer an objection you haven't fully understood. 'Compared to what?' converts a wall into a doorway."
@@ -322,9 +320,9 @@ const MODES = {
         options: [
           { t: "“They're a fine company. If there were one thing you could improve about how it works today, what would it be?”", correct: true,
             fb: "You validate their choice (lowering defenses), then open a small gap without ever attacking the competitor. Nobody is 100% happy — that one improvement is your entry point." },
-          { t: "Ask a series of pointed questions about gaps you know the competitor has, steering them toward realizing what they're missing out on.", correct: false,
+          { t: "“And do they handle your reporting automatically? What about same-day support — do you get that today?”", correct: false,
             fb: "Leading questions designed to trap them feel like a setup — and they sense it. It's a thinly veiled attack on their judgment for choosing the incumbent. Open a gap, don't engineer a gotcha." },
-          { t: "Offer to run a free side-by-side comparison so they can objectively see exactly where you outperform their current provider.", correct: false,
+          { t: "“Let me run you a free side-by-side comparison — you'll see exactly where we outperform what you've got now.”", correct: false,
             fb: "Jumping to a bake-off before they've admitted any dissatisfaction is premature — and frames it as your-product-vs-theirs, which makes them defend their choice harder. Find the gap first." },
           { t: "“That's great. What would it take for a company like ours to earn a shot at your business down the road?”", correct: false,
             fb: "Not terrible — but it punts to 'someday' and accepts the brush-off. You haven't surfaced any dissatisfaction to act on now, so 'down the road' usually means never." }
@@ -341,9 +339,9 @@ const MODES = {
             fb: "'Next quarter' is where deals go to die. You accepted a vague delay without learning why now is bad — so you have no idea if next quarter will be any different. It won't." },
           { t: "“Is it the cost, the setup effort, or something else happening on your end that makes now feel wrong?”", correct: true,
             fb: "You break the fog of 'timing' into concrete causes — each with a different fix. Maybe setup's faster than they fear, or billing can defer. You can't solve 'timing,' but you can solve the specific thing behind it." },
-          { t: "Mention that you have some pricing flexibility this quarter that likely won't be available later, to give them a reason to act sooner.", correct: false,
+          { t: "“I'll be honest — I've got some pricing flexibility this quarter that probably won't be around next quarter, if that helps you act now.”", correct: false,
             fb: "Leading with a deadline-discount before you understand the objection trains them to wait for deals and can read as pressure. Diagnose the real reason before reaching for incentives." },
-          { t: "Agree to revisit later, but ask to keep them on your newsletter so you stay top of mind until the timing improves for them.", correct: false,
+          { t: "“No problem — let me just keep you on our newsletter so we stay in touch until the timing's better.”", correct: false,
             fb: "A newsletter is a soft burial. The objection stays unexamined and your 'active deal' quietly becomes a passive contact who forgets you existed." }
         ],
         coach: "<b>Hopkins' rule:</b> 'Bad timing' is almost always a different objection in disguise. Diagnose before you accept the delay."
@@ -363,11 +361,11 @@ const MODES = {
         options: [
           { t: "“What made you start looking now?”", correct: true,
             fb: "Short and devastatingly effective. The trigger event reveals their pain, their urgency, and how to frame everything next — all in one question. Qualifying starts with 'why now.'" },
-          { t: "Give a tight two-minute overview of your product and the main problems it solves, then ask if any of it resonates with them.", correct: false,
+          { t: "“Great — let me give you the quick two-minute version of what we do and the problems we solve, then you tell me if any of it lands.”", correct: false,
             fb: "Even a 'tight' pitch is selling blind — you don't yet know their situation, so you're guessing at what matters. You'll spend your best minutes on the wrong things." },
-          { t: "Ask a structured series of qualifying questions about their company size, industry, and current tools to map their profile.", correct: false,
+          { t: "“Sure — to point you the right way, can I get your company size, your industry, and what tools you're using today?”", correct: false,
             fb: "Firing a checklist at a brand-new lead feels like an intake form, not a conversation. It gathers facts but misses the one thing that actually predicts a sale: why they're looking right now." },
-          { t: "Ask what specifically caught their eye in the ad, then build your pitch around the feature that drew them in.", correct: false,
+          { t: "“Happy to help — what was it in the ad that caught your eye? I'll zero in on that.”", correct: false,
             fb: "Decent instinct, but an ad's hook is shallow signal. What drew a click isn't the same as what's driving a purchase. Get the underlying trigger, not the surface curiosity." }
         ],
         coach: "<b>Hopkins' rule:</b> 'What made you start looking now' is the most valuable thing you can learn first — it reveals pain and urgency at once."
@@ -393,13 +391,13 @@ const MODES = {
         line: "It'd be nice to have, sure, but we're getting by fine without it for now.",
         ask: "How do you respond?",
         options: [
-          { t: "Paint a vivid picture of where their business could be a year from now if they solved this problem today instead of waiting.", correct: false,
+          { t: "“Picture where you could be a year from now if you solved this today instead of waiting — it's a totally different business.”", correct: false,
             fb: "Future-pacing the upside is a real technique — but it lands flat on someone who doesn't yet feel a problem. You have to make the present pain concrete before the future vision means anything." },
           { t: "“What's 'getting by' actually costing you each week — in hours or dollars?”", correct: true,
             fb: "You quantify the pain of the status quo. People tolerate problems until the ongoing cost is made concrete. Turning a vague 'we're fine' into '6 hours a week' is what creates the need." },
-          { t: "Share a quick story about a similar client who thought they were fine, then discovered real savings after switching to you.", correct: false,
+          { t: "“Funny enough, I had a client just like you who thought they were fine too — then they switched and found real savings. Let me tell you about them.”", correct: false,
             fb: "A case story is good support material, but used here it's you talking instead of them. They can dismiss someone else's story; they can't dismiss their own number. Make them do the math." },
-          { t: "Acknowledge they're managing, and ask what would have to change in their business for this to become a priority.", correct: false,
+          { t: "“Totally fair that you're managing — what would have to change around here for fixing this to become a priority?”", correct: false,
             fb: "Close, but it outsources the work to them and invites a vague 'I dunno.' You want to actively surface the hidden cost they've stopped noticing — not ask them to imagine a future trigger." }
         ],
         coach: "<b>Hopkins' rule:</b> No pain, no sale. If they're 'getting by,' quantify what getting by is quietly costing them."
@@ -410,13 +408,13 @@ const MODES = {
         line: "This sounds really promising! So what are the next steps on your end?",
         ask: "Pick the smartest move.",
         options: [
-          { t: "Match their energy and propose sending the agreement over today so you can lock in the momentum while they're excited.", correct: false,
+          { t: "“Love the energy — why don't I send the agreement over today so we lock this in while it's hot?”", correct: false,
             fb: "Riding the excitement to paper feels decisive but it's reckless — you don't know who else signs off or how their procurement works. Deals rushed to contract stall in steps you never saw coming." },
           { t: "“Walk me through how a decision like this usually gets made on your side — and who else tends to weigh in?”", correct: true,
             fb: "Enthusiasm makes reps skip qualifying the process. Mapping who decides, how, and by when prevents the deal from dying in a hidden approval step. Excitement is not the same as authority." },
-          { t: "Outline your standard onboarding timeline and ask which start date works best for getting them up and running.", correct: false,
+          { t: "“Great — onboarding takes about two weeks. Which start date works best to get you up and running?”", correct: false,
             fb: "Talking start dates assumes the decision is made and skips past the question of how it actually gets made. You're scheduling a sale you haven't qualified." },
-          { t: "Ask whether they have everything they need from you, and offer to answer any final questions before moving ahead.", correct: false,
+          { t: "“Awesome — do you have everything you need from me? Any last questions before we move ahead?”", correct: false,
             fb: "Pleasant but passive — it treats their enthusiasm as the finish line. You learn nothing about the real decision process and stay blind to the other stakeholders." }
         ],
         coach: "<b>Hopkins' rule:</b> Enthusiasm isn't a yes. Always qualify the decision process — who, how, and by when — even when they're excited."
@@ -449,13 +447,13 @@ const MODES = {
         line: "So if we did decide to go ahead... how soon could we actually get started?",
         ask: "This is a buying signal. What do you do?",
         options: [
-          { t: "Give them the timeline, then reassure them there's no rush and they should take whatever time they need to be sure.", correct: false,
+          { t: "“We could move pretty fast — but no rush at all, take whatever time you need to be totally sure.”", correct: false,
             fb: "They signaled readiness and you talked them back out of it. 'No rush' when someone is closing themselves snuffs the momentum you didn't have to do anything to earn." },
           { t: "“We could have you live by Friday. Want me to start the paperwork so we hit that date?”", correct: true,
             fb: "You answer the signal and assume the sale forward. They asked about starting, so you move toward starting — the assumptive close. Hesitating here is how warm deals cool." },
-          { t: "Answer the timing question, then take the opportunity to highlight a couple more features they'll get value from once they're set up.", correct: false,
+          { t: "“As soon as next week — and once you're set up, let me also show you a couple other features you'll get a ton of value from.”", correct: false,
             fb: "Classic overselling. They're ready — and you reopened the pitch. Every extra feature is another thing for them to question. When you hear the close, stop selling." },
-          { t: "Tell them the timeline depends on a few details, and suggest scheduling a follow-up call to scope out their specific setup.", correct: false,
+          { t: "“It depends on a few details — why don't we set up a follow-up call to scope out your specific setup?”", correct: false,
             fb: "You met a buying signal with a speed bump. Booking another call to 'scope it out' when they're ready now inserts delay exactly where you want momentum." }
         ],
         coach: "<b>Hopkins' rule:</b> Questions about delivery, timing, or logistics are buying signals. Answer them, then assume the close."
@@ -470,9 +468,9 @@ const MODES = {
             fb: "A yes/no question hands them the easy exit. 'Let me think about it' is right there waiting. When they're this warm, make the question one where every answer moves forward." },
           { t: "“Perfect — would you prefer the monthly plan, or the annual one with the discount?”", correct: true,
             fb: "The alternate-choice close. Both answers are a yes — you've shifted the question from 'whether' to 'which.' It feels like a small, comfortable decision instead of a big scary commitment." },
-          { t: "Express genuine enthusiasm, then ask if there's anything at all still holding them back before you proceed.", correct: false,
+          { t: "“That's fantastic to hear! Before we go ahead — is there anything at all still holding you back?”", correct: false,
             fb: "Asking 'anything holding you back?' on a warm prospect invites them to invent a doubt that wasn't there. You went looking for an objection at the exact moment you should be closing." },
-          { t: "Summarize the key benefits one more time to reinforce the value, then ask if they're ready to get started.", correct: false,
+          { t: "“Just to recap the value you're getting — the time savings, the support, the reporting — so, ready to get started?”", correct: false,
             fb: "Re-selling someone who already said yes risks reopening settled questions, and it ends on a yes/no anyway. They're past the benefits — give them an easy forward step." }
         ],
         coach: "<b>Hopkins' rule:</b> The alternate-choice close offers two yeses. 'A or B?' beats 'yes or no?' every time."
@@ -517,11 +515,11 @@ const MODES = {
         options: [
           { t: "“I appreciate you being straight with me. Just so I can learn — what tipped it toward no?”", correct: true,
             fb: "Gracious and useful at once. You keep the relationship warm for the future and surface the real reason — often a fixable objection you can still address, or a lesson for the next sale." },
-          { t: "Make one final case, reiterating the strongest benefit and the cost of not solving the problem, in case they reconsider.", correct: false,
+          { t: "“Before you decide for sure — just remember what this is costing you every month it goes unsolved. Worth one more look?”", correct: false,
             fb: "One more pitch after a clear no reads as not listening, and pressure at the finish sours the relationship. You can sometimes reopen a no — but by asking why, not by re-selling over it." },
-          { t: "Graciously accept it and ask if you can check back in a few months in case their situation changes down the line.", correct: false,
+          { t: "“Completely understand. Mind if I check back in a few months in case things change on your end?”", correct: false,
             fb: "Polite and not wrong — but it skips the most valuable step. Without learning WHY they passed, you can't address a fixable reason now or improve next time. Ask why before you schedule the future." },
-          { t: "Respect their decision, thank them for their time, and ask if they know anyone else who might benefit from what you offer.", correct: false,
+          { t: "“No worries, thanks for your time — say, do you know anyone else who might get value from this?”", correct: false,
             fb: "Jumping straight to a referral ask the instant they say no is tone-deaf — you haven't even learned why they declined. Understand the no first; the relationship (and any referral) depends on it." }
         ],
         coach: "<b>Hopkins' rule:</b> Every no is a not-yet if you exit with grace. Ask why, stay warm, and keep the door open."
@@ -558,11 +556,11 @@ const MODES = {
         options: [
           { t: "“I hear you — that's exactly why I called instead of emailing. Give me 20 seconds; if it's not relevant, I'll let you go.”", correct: true,
             fb: "You acknowledge their time, give them an easy out, and ask for a tiny specific window. The 'if not, I'll let you go' lowers the stakes and disarms the reflex. Empathy plus a micro-ask." },
-          { t: "Apologize for the bad timing and ask what day and time would work better for a quick scheduled call later this week.", correct: false,
+          { t: "“So sorry to catch you at a bad time — what day and time this week would work better for a quick call?”", correct: false,
             fb: "'Call me later' is usually a polite 'call me never.' You can often earn the moment now with a respectful micro-ask. Rescheduling cedes the one chance you fought to get." },
-          { t: "Quickly assure them it'll only take a moment, then launch straight into your value pitch before they can object again.", correct: false,
+          { t: "“It'll just take a second, I promise — so, we help teams cut their onboarding time in half by...”", correct: false,
             fb: "Steamrolling a stated boundary confirms their fear that you don't respect their time. The pitch lands on a closed mind and earns a hang-up." },
-          { t: "Acknowledge they're busy and offer to send a short email instead so they can look at it whenever they have a free minute.", correct: false,
+          { t: "“No problem at all — why don't I just shoot you a short email you can look at whenever you get a free minute?”", correct: false,
             fb: "Retreating to email at the first resistance forfeits the live conversation — your biggest advantage on a call. That email joins hundreds of unread others. Try to earn the 20 seconds first." }
         ],
         coach: "<b>Hopkins' rule:</b> Meet the brush-off with empathy plus a tiny, low-risk ask. Give them an exit and they'll often give you the moment."
@@ -575,11 +573,11 @@ const MODES = {
         options: [
           { t: "“Of course — I'm hoping to speak with Jordan about reducing their team's onboarding time. Are they the right person, or is it someone else?”", correct: true,
             fb: "Respectful, honest, and you treat the gatekeeper as an ally — even asking their guidance on who's right. Gatekeepers open doors for people who respect them and trust what they say." },
-          { t: "Warmly explain you have some valuable information for Jordan specifically and ask if they could kindly put you through.", correct: false,
+          { t: "“I've got some really valuable information for Jordan — would you mind putting me through?”", correct: false,
             fb: "'Valuable information' with no specifics is exactly what every salesperson says — the gatekeeper has heard it a thousand times. Vague value reads as a screen-me-out signal." },
-          { t: "Mention that Jordan will know what it's about and that it's a somewhat time-sensitive matter you'd like to discuss directly.", correct: false,
+          { t: "“Oh, Jordan will know what it's about — it's a bit time-sensitive, so I'd love to speak with them directly.”", correct: false,
             fb: "Implying a prior relationship that doesn't exist is a half-truth that unravels fast — and gatekeepers always find out. You start the real relationship having been caught bending the truth." },
-          { t: "Politely ask for Jordan by name and say you'll only need a brief moment of their time to introduce yourself.", correct: false,
+          { t: "“Could you put me through to Jordan? I'll only need a brief moment of their time to introduce myself.”", correct: false,
             fb: "Dodging the 'what's this regarding' question makes the gatekeeper's job harder and puts them on guard. Answer honestly and enlist them — they have more power over your access than anyone." }
         ],
         coach: "<b>Hopkins' rule:</b> The gatekeeper is an ally, not an obstacle. Honesty and respect get you further than tricks ever will."
@@ -607,11 +605,11 @@ const MODES = {
         options: [
           { t: "“How's your team handling onboarding for new hires right now? I ask because that's exactly where we tend to save people a lot of time.”", correct: true,
             fb: "You flip attention into a conversation with a question about THEIR world. Now they're talking about their pain instead of listening to your pitch — and that's where real selling begins." },
-          { t: "Give a crisp 30-second summary of what you do, the key benefit, and the kind of results your typical client sees.", correct: false,
+          { t: "“Great — so in 30 seconds: we help teams cut onboarding time in half, and our typical client sees results in the first month.”", correct: false,
             fb: "You finally have attention and spend it talking AT them. Even a crisp pitch is forgettable; their own problem is not. Ask about their world before you describe yours." },
-          { t: "Briefly share an impressive result you got for a similar company to immediately establish credibility and grab their interest.", correct: false,
+          { t: "“So, we just helped a company a lot like yours cut their onboarding time by 60% — pretty remarkable results, honestly.”", correct: false,
             fb: "A proof point can be powerful — but leading with someone else's result keeps the spotlight on you. They care about their situation first. Earn relevance with a question, then bring the proof." },
-          { t: "Ask if they'd be open to a short demo later this week where you can show them exactly how it all works.", correct: false,
+          { t: "“Would you be open to a short demo later this week? I can show you exactly how the whole thing works.”", correct: false,
             fb: "Jumping to a calendar ask the second they warm up is too much, too fast. You haven't created any pull yet. Open their world with a question before you reach for the booking." }
         ],
         coach: "<b>Hopkins' rule:</b> The moment you have attention, ask about their world. A question about their pain beats any pitch about your product."
